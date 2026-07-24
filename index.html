@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>China Innovation Map</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Modern reset & touch responsiveness */
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Custom Leaflet Tooltip Styling */
+        .leaflet-tooltip.custom-tooltip {
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            border-radius: 0.75rem;
+            padding: 0;
+            width: min(320px, calc(100vw - 32px));
+            white-space: normal;
+        }
+        .leaflet-tooltip-top:before {
+            border-top-color: white;
+        }
+        .leaflet-tooltip-bottom:before {
+            border-bottom-color: white;
+        }
+        
+        /* Map container height */
+        #map {
+            height: 100%;
+            width: 100%;
+            z-index: 10;
+        }
+
+        /* Custom scrollbar styling for trip list */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 2px;
+        }
+
+        /* Bottom sheet drawer animation on mobile */
+        @media (max-width: 767px) {
+            .mobile-drawer {
+                transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            }
+            .mobile-drawer.collapsed {
+                transform: translateY(calc(100% - 56px));
+            }
+            .mobile-drawer.expanded {
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 flex flex-col h-[100dvh] font-sans overflow-hidden">
+
+    <!-- Top Header -->
+    <header class="bg-white border-b border-gray-200 z-30 shrink-0 relative">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3.5 flex items-center justify-between gap-2">
+            <div class="min-w-0 flex-1">
+                <h1 class="text-base sm:text-xl md:text-2xl font-bold text-gray-900 truncate tracking-tight">China Tech Map</h1>
+                <p class="text-xs sm:text-sm text-gray-500 truncate hidden xs:block sm:block">Interactive overview of key tech, robotics & infrastructure hubs.</p>
+            </div>
+            <div class="flex items-center space-x-2 shrink-0">
+                <span class="hidden lg:inline-flex items-center rounded-md bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-900 ring-1 ring-inset ring-brand-500/20">
+                    Hover/Tap dots for details
+                </span>
+                <!-- Trip Planning Toggle Button -->
+                <button id="plan-trip-btn" class="px-3 sm:px-4 py-2 bg-brand-600 text-white rounded-lg shadow-sm hover:bg-brand-700 active:bg-brand-800 font-medium text-xs sm:text-sm transition-all duration-150 whitespace-nowrap flex items-center min-h-[38px]">
+                    <svg class="w-4 h-4 mr-1.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+                    <span id="plan-btn-text">Trip Planner</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow min-h-0 flex flex-col md:flex-row relative overflow-hidden">
+        
+        <!-- Legend & Planner Sidebar / Mobile Bottom Sheet Drawer -->
+        <div id="sidebar-drawer" class="mobile-drawer collapsed w-full md:w-80 lg:w-96 fixed md:relative bottom-0 left-0 right-0 md:bottom-auto md:left-auto md:right-auto h-[75vh] md:h-full bg-white border-t md:border-t-0 md:border-r border-gray-200 z-20 flex flex-col min-h-0 shrink-0 shadow-2xl md:shadow-none rounded-t-2xl md:rounded-none">
+            
+            <!-- Mobile Drawer Handle & Header Bar -->
+            <div id="drawer-header" class="p-3 sm:p-4 border-b border-gray-100 flex items-center justify-between cursor-pointer md:cursor-default select-none shrink-0 bg-white rounded-t-2xl md:rounded-none">
+                <div class="flex items-center space-x-2">
+                    <div class="md:hidden w-8 h-1 bg-gray-300 rounded-full mx-auto fixed top-2 left-1/2 -translate-x-1/2"></div>
+                    <h2 id="sidebar-title" class="font-bold text-gray-800 uppercase tracking-wider text-xs sm:text-xs">Categories & Info</h2>
+                    <span id="mobile-trip-badge" class="bg-brand-100 text-brand-800 text-[10px] font-semibold px-2 py-0.5 rounded-full hidden">0 stops</span>
+                </div>
+                <div class="flex items-center space-x-1 md:hidden">
+                    <span id="drawer-status" class="text-xs text-brand-600 font-medium mr-1">Tap to expand</span>
+                    <button id="toggle-drawer-btn" class="p-1 text-gray-400 hover:text-gray-600 focus:outline-none" aria-label="Toggle drawer">
+                        <svg id="drawer-chevron" class="w-5 h-5 transition-transform duration-200 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Drawer Scrollable Body -->
+            <div class="flex-1 overflow-y-auto custom-scrollbar flex flex-col min-h-0">
+                
+                <!-- Category Legend Section -->
+                <div id="legend-section" class="p-4 space-y-2.5">
+                    <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Categories</div>
+                    <div class="grid grid-cols-2 md:grid-cols-1 gap-2" id="legend-container">
+                        <!-- Legend items injected by JS -->
+                    </div>
+                </div>
+                
+                <!-- Key Locations Jump Section -->
+                <div class="p-4 border-t border-gray-100 bg-gray-50/50">
+                    <h2 class="font-semibold text-gray-700 uppercase tracking-wider text-[11px] mb-2.5">Jump to Key Cities</h2>
+                    <div class="flex flex-wrap gap-1.5" id="city-tags-container">
+                        <!-- City filter tags injected by JS -->
+                    </div>
+                </div>
+                
+                <!-- Trip Planner Section -->
+                <div id="trip-planner-section" class="p-4 border-t border-gray-200 hidden flex-col flex-1 min-h-0 bg-slate-50">
+                    <div class="flex justify-between items-center mb-2.5">
+                        <h2 class="font-semibold text-gray-800 uppercase tracking-wider text-xs flex items-center text-brand-700">
+                            <svg class="w-4 h-4 mr-1.5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            Trip Itinerary
+                        </h2>
+                        <span id="trip-count" class="bg-brand-100 text-brand-800 py-0.5 px-2 rounded-full text-xs font-semibold">0 stops</span>
+                    </div>
+                    
+                    <div class="text-xs text-gray-600 mb-3 bg-blue-50/80 p-2.5 rounded-lg border border-blue-100 leading-relaxed">
+                        <span class="font-semibold text-brand-900">Instructions:</span> Tap markers on the map to add/remove them from your route.
+                    </div>
+
+                    <div id="trip-list" class="flex-1 min-h-[120px] max-h-[280px] md:max-h-none overflow-y-auto custom-scrollbar space-y-2 pr-1 mb-3">
+                        <!-- Trip stops injected by JS -->
+                    </div>
+                    
+                    <div class="space-y-2 mt-auto pt-2 border-t border-gray-200/60">
+                        <button id="copy-trip-btn" class="w-full py-2.5 px-4 bg-brand-600 text-white text-xs sm:text-sm font-semibold rounded-lg hover:bg-brand-700 active:bg-brand-800 hidden shadow-sm transition-all flex items-center justify-center min-h-[44px]">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                            Copy for WhatsApp
+                        </button>
+
+                        <button id="clear-trip-btn" class="w-full py-2 px-4 bg-white border border-gray-300 text-gray-700 text-xs sm:text-sm font-medium rounded-lg hover:bg-gray-50 active:bg-gray-100 hidden transition-colors min-h-[40px]">
+                            Clear Entire Trip
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Mobile Drawer Backdrop Overlay -->
+        <div id="drawer-backdrop" class="fixed inset-0 bg-black/30 z-10 hidden md:hidden transition-opacity duration-200"></div>
+
+        <!-- Map Container -->
+        <div class="flex-grow relative w-full h-full min-h-0">
+            <div id="map"></div>
+        </div>
+
+    </main>
+
+    <script>
+        // Define color palette for different topics
+        const topicColors = {
+            "Lights out depot": "#8b5cf6", // Violet
+            "AI/Cloud": "#3b82f6",         // Blue
+            "Robotics": "#f97316",         // Orange
+            "VA": "#14b8a6",               // Teal
+            "RPC": "#eab308",              // Yellow
+            "Digi Tunnel": "#64748b",      // Slate
+            "Digi Depot": "#ec4899",       // Pink
+            "Don't know yet": "#1f2937"    // Gray 800
+        };
+
+        // City Coordinates for Jump Navigation
+        const cityCoords = {
+            "Shenzhen": [22.65, 114.15, 10],
+            "Hangzhou": [30.25, 120.15, 11],
+            "Shanghai": [31.18, 121.45, 10],
+            "Nanjing": [32.08, 118.78, 11],
+            "Suzhou": [31.30, 120.65, 11]
+        };
+
+        // Data from the provided document
+        const companies = [
+            { 
+                city: "Shenzhen", company: "BYD Factory", topic: "Lights out depot", 
+                desc: "Manufacturing automation at scale & automated urban-transit systems", 
+                address: "3009 BYD Road, Pingshan District, Shenzhen", lat: 22.6775, lng: 114.3468 
+            },
+            { 
+                city: "Shenzhen", company: "Shenzhen Metro Smart Depot", topic: "Lights out depot", 
+                desc: "World's first subway-based robotic delivery service using AI dispatching and lidar navigation to restock stores.", 
+                address: "Changzhen Depot Complex, Guangming District, Shenzhen", lat: 22.7538, lng: 113.9298 
+            },
+            { 
+                city: "Hangzhou", company: "Alibaba Cloud Valley", topic: "AI/Cloud", 
+                desc: "AI service applications · City Brain platform & cloud infrastructure. Real-time incident detection & cross-agency data fusion at city scale", 
+                address: "969 West Wen Yi Road, Yuhang District, Hangzhou", lat: 30.2828, lng: 120.0215 
+            },
+            { 
+                city: "Hangzhou", company: "Unitree", topic: "Robotics", 
+                desc: "Robotics & embodied AI for inspection and station automation", 
+                address: "3rd Floor, Building 1, Fengda Creative Park, No. 88 Dongliu Road, Binjiang District, Hangzhou", lat: 30.1802, lng: 120.1905 
+            },
+            { 
+                city: "Hangzhou", company: "Deep Robotics", topic: "Robotics", 
+                desc: "Autonomous inspection robots for depots, tunnels and infrastructure", 
+                address: "Building 3, Zijin Dream Plaza, 36 Xinran Street, Xihu District, Hangzhou", lat: 30.3015, lng: 120.0888 
+            },
+            { 
+                city: "Hangzhou", company: "Hikvision", topic: "VA", 
+                desc: "Guanlan large-scale AI models for advanced video analytics, intelligent event recognition, and multimodal semantic search.", 
+                address: "No.555 Qianmo Road, Binjiang District, Hangzhou", lat: 30.1983, lng: 120.2131 
+            },
+            { 
+                city: "Shanghai", company: "Agibot", topic: "Robotics", 
+                desc: "Embodied AI and humanoid robots designed for real-world industrial automation, commercial services, and dexterous manipulation.", 
+                address: "No. 2555, Xiupu Road, Pudong New Area, Shanghai", lat: 31.1325, lng: 121.5977 
+            },
+            { 
+                city: "Shanghai", company: "Huawei Lianqiu Lake R&D", topic: "Don't know yet", 
+                desc: "Huawei's largest global R&D hub focusing on breakthroughs in 5G, cloud computing, artificial intelligence, and AI Data Lake solutions.", 
+                address: "Jinze Town, Qingpu District, Shanghai", lat: 31.0664, lng: 120.9702 
+            },
+            { 
+                city: "Nanjing", company: "Puzhen", topic: "RPC", 
+                desc: "Digital design and smart manufacturing of rail transit vehicles using advanced PLM, 3D CAD, and process simulation systems.", 
+                address: "No.68, North PuZhu Road, Jiangbei New Area, Nanjing", lat: 32.1382, lng: 118.7302 
+            },
+            { 
+                city: "Shanghai", company: "STEC", topic: "Digi Tunnel", 
+                desc: "AI-driven underground engineering, integrating digital twin technology and machine learning for real-time tunnel monitoring and smart construction.", 
+                address: "1099 South Wanping Rd., Xuhui District, Shanghai", lat: 31.1824, lng: 121.4552 
+            },
+            { 
+                city: "Suzhou", company: "Suzhou Chaoyanglu Smart Depot", topic: "Digi Depot", 
+                desc: "automated train inspection & depot VA", 
+                address: "Chaoyang Road Depot, Suzhou Metro, Suzhou", lat: 31.2989, lng: 120.5853 
+            },
+            { 
+                city: "Suzhou", company: "Huawei Open Lab", topic: "AI/Cloud", 
+                desc: "Collaborative innovation hub developing cloud, AI, and smart city solutions through open ecosystem partnerships.", 
+                address: "No. 999 Xiandai Avenue, Suzhou Industrial Park, Suzhou", lat: 31.3182, lng: 120.7306 
+            },
+            { 
+                city: "Shanghai", company: "Shanghai Urban Operation Group SUOG", topic: "Digi Tunnel", 
+                desc: "responsible for the operation and maintenance of half of Shanghai’s rail transit network", 
+                address: "No. 600, Dapu Road, Huangpu District, Shanghai, P.R. China", lat: 31.2001, lng: 121.4725 
+            }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            let isPlanning = false;
+            let tripStops = [];
+            let polylineLayer = null;
+            let mapMarkers = {};
+            let isDrawerExpanded = false;
+
+            // Mobile detection helper
+            const isMobile = () => window.innerWidth < 768;
+
+            // Initialize Map
+            const map = L.map('map', {
+                zoomControl: false,
+                tap: true
+            }).setView([28.5, 118.0], 6);
+
+            // Responsive Zoom position
+            const zoomControl = L.control.zoom({
+                position: isMobile() ? 'topright' : 'bottomright'
+            }).addTo(map);
+
+            // Add clean map tiles
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap &copy; CARTO',
+                subdomains: 'abcd',
+                maxZoom: 20
+            }).addTo(map);
+
+            // Generate Legend
+            const legendContainer = document.getElementById('legend-container');
+            for (const [topic, color] of Object.entries(topicColors)) {
+                const item = document.createElement('div');
+                item.className = 'flex items-center space-x-2 text-xs sm:text-sm text-gray-700 bg-gray-50/60 p-1.5 rounded-md border border-gray-100';
+                item.innerHTML = `
+                    <span class="w-3 h-3 rounded-full inline-block shrink-0" style="background-color: ${color}; box-shadow: 0 0 0 2px white, 0 0 0 3px ${color}40;"></span>
+                    <span class="font-medium truncate">${topic}</span>
+                `;
+                legendContainer.appendChild(item);
+            }
+
+            // Generate City Filter Jump Tags
+            const cityTagsContainer = document.getElementById('city-tags-container');
+            Object.keys(cityCoords).forEach(cityName => {
+                const tag = document.createElement('button');
+                tag.className = 'text-xs px-2.5 py-1 bg-white border border-gray-200 hover:border-brand-500 hover:text-brand-600 active:bg-brand-50 text-gray-700 rounded-lg font-medium shadow-2xs transition-all flex items-center min-h-[32px]';
+                tag.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-brand-500 mr-1.5"></span>${cityName}`;
+                tag.addEventListener('click', () => {
+                    const [lat, lng, zoom] = cityCoords[cityName];
+                    map.flyTo([lat, lng], zoom, { duration: 1.2 });
+                    if (isMobile()) {
+                        collapseDrawer();
+                    }
+                });
+                cityTagsContainer.appendChild(tag);
+            });
+
+            // Populate Map Markers
+            companies.forEach((data, index) => {
+                data.id = index;
+                const markerColor = topicColors[data.topic] || '#000000';
+                
+                // Radius for touch optimization
+                const markerRadius = isMobile() ? 10 : 8;
+
+                const marker = L.circleMarker([data.lat, data.lng], {
+                    radius: markerRadius,
+                    fillColor: markerColor,
+                    color: '#ffffff',
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.9
+                }).addTo(map);
+
+                mapMarkers[data.id] = marker; 
+                marker.companyData = data;
+
+                const tooltipContent = `
+                    <div class="p-3.5 bg-white rounded-xl overflow-hidden">
+                        <div class="flex items-center space-x-1.5 mb-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${markerColor};"></span>
+                            <span class="text-[10px] font-bold uppercase tracking-wider" style="color: ${markerColor};">${data.topic}</span>
+                        </div>
+                        <h3 class="font-bold text-gray-900 text-base leading-snug mb-1">${data.company}</h3>
+                        <p class="text-xs text-gray-500 mb-2 flex items-center">
+                            <svg class="w-3.5 h-3.5 mr-1 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
+                            ${data.city} &middot; <span class="truncate">${data.address}</span>
+                        </p>
+                        <div class="text-xs text-gray-700 bg-gray-50 p-2.5 rounded-lg border border-gray-100 leading-relaxed">
+                            ${data.desc}
+                        </div>
+                    </div>
+                `;
+
+                marker.bindTooltip(tooltipContent, {
+                    direction: 'top',
+                    className: 'custom-tooltip',
+                    offset: [0, -8],
+                    opacity: 1
+                });
+                
+                marker.on('mouseover', function () { if (!isMobile()) this.setRadius(12); });
+                marker.on('mouseout', function () { if (!isMobile()) this.setRadius(8); });
+
+                // Marker Click Handler
+                marker.on('click', function(e) {
+                    // Center map on marker on touch
+                    map.panTo([data.lat, data.lng], { animate: true, duration: 0.4 });
+
+                    if (isPlanning) {
+                        const stopIndex = tripStops.findIndex(stop => stop.id === data.id);
+                        if (stopIndex > -1) {
+                            tripStops.splice(stopIndex, 1);
+                        } else {
+                            tripStops.push(data);
+                        }
+                        updateTripUI();
+                    }
+                });
+            });
+            
+            // Initial bounds fitting
+            const group = new L.featureGroup(Object.values(mapMarkers));
+            map.fitBounds(group.getBounds().pad(0.12));
+
+            // DOM Element References
+            const planBtn = document.getElementById('plan-trip-btn');
+            const planBtnText = document.getElementById('plan-btn-text');
+            const tripSection = document.getElementById('trip-planner-section');
+            const copyBtn = document.getElementById('copy-trip-btn');
+            const clearBtn = document.getElementById('clear-trip-btn');
+            
+            // Drawer Controls
+            const sidebarDrawer = document.getElementById('sidebar-drawer');
+            const drawerHeader = document.getElementById('drawer-header');
+            const drawerStatus = document.getElementById('drawer-status');
+            const drawerChevron = document.getElementById('drawer-chevron');
+            const drawerBackdrop = document.getElementById('drawer-backdrop');
+            const mobileTripBadge = document.getElementById('mobile-trip-badge');
+
+            // Drawer Toggle Logic
+            function expandDrawer() {
+                isDrawerExpanded = true;
+                sidebarDrawer.classList.remove('collapsed');
+                sidebarDrawer.classList.add('expanded');
+                drawerChevron.classList.remove('rotate-180');
+                drawerStatus.textContent = 'Tap to collapse';
+                drawerBackdrop.classList.remove('hidden');
+                setTimeout(() => map.invalidateSize(), 300);
+            }
+
+            function collapseDrawer() {
+                isDrawerExpanded = false;
+                sidebarDrawer.classList.remove('expanded');
+                sidebarDrawer.classList.add('collapsed');
+                drawerChevron.classList.add('rotate-180');
+                drawerStatus.textContent = isPlanning ? 'Trip Active' : 'Tap to expand';
+                drawerBackdrop.classList.add('hidden');
+                setTimeout(() => map.invalidateSize(), 300);
+            }
+
+            drawerHeader.addEventListener('click', () => {
+                if (!isMobile()) return;
+                if (isDrawerExpanded) {
+                    collapseDrawer();
+                } else {
+                    expandDrawer();
+                }
+            });
+
+            drawerBackdrop.addEventListener('click', collapseDrawer);
+
+            // Toggle Planner Mode
+            planBtn.addEventListener('click', () => {
+                isPlanning = !isPlanning;
+                if (isPlanning) {
+                    planBtnText.textContent = 'Exit Planning';
+                    planBtn.classList.replace('bg-brand-600', 'bg-slate-700');
+                    planBtn.classList.replace('hover:bg-brand-700', 'hover:bg-slate-800');
+                    tripSection.classList.remove('hidden');
+                    tripSection.classList.add('flex');
+                    document.getElementById('sidebar-title').textContent = 'Trip Planner';
+                    document.getElementById('map').style.cursor = 'crosshair';
+                    
+                    if (isMobile()) {
+                        expandDrawer();
+                    }
+                } else {
+                    planBtnText.textContent = 'Trip Planner';
+                    planBtn.classList.replace('bg-slate-700', 'bg-brand-600');
+                    planBtn.classList.replace('hover:bg-slate-800', 'hover:bg-brand-700');
+                    tripSection.classList.add('hidden');
+                    tripSection.classList.remove('flex');
+                    document.getElementById('sidebar-title').textContent = 'Categories & Info';
+                    document.getElementById('map').style.cursor = '';
+                }
+            });
+
+            // Copy Trip for WhatsApp
+            copyBtn.addEventListener('click', async () => {
+                if (tripStops.length === 0) return;
+
+                const message = [
+                    '*China Innovation Trip*',
+                    '',
+                    ...tripStops.map((stop, i) => `${i + 1}. ${stop.company}\n   ${stop.city} · ${stop.topic}`)
+                ].join('\n\n');
+
+                try {
+                    if (!navigator.clipboard || !navigator.clipboard.writeText) {
+                        throw new Error('Clipboard API unavailable');
+                    }
+                    await navigator.clipboard.writeText(message);
+                    copyBtn.textContent = 'Copied to Clipboard!';
+                    setTimeout(() => { 
+                        copyBtn.innerHTML = `
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                            Copy for WhatsApp
+                        `;
+                    }, 1800);
+                } catch (error) {
+                    const fallback = document.createElement('textarea');
+                    fallback.value = message;
+                    fallback.setAttribute('aria-label', 'WhatsApp itinerary message');
+                    fallback.style.position = 'fixed';
+                    fallback.style.left = '50%';
+                    fallback.style.top = '50%';
+                    fallback.style.transform = 'translate(-50%, -50%)';
+                    fallback.style.width = 'min(90vw, 420px)';
+                    fallback.style.height = '160px';
+                    fallback.style.padding = '12px';
+                    fallback.style.zIndex = '1000';
+                    document.body.appendChild(fallback);
+                    fallback.focus();
+                    fallback.select();
+                    copyBtn.textContent = 'Text selected — press ⌘C / Ctrl+C';
+                    setTimeout(() => {
+                        fallback.remove();
+                        copyBtn.innerHTML = `
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                            Copy for WhatsApp
+                        `;
+                    }, 6000);
+                }
+            });
+
+            // Clear Trip
+            clearBtn.addEventListener('click', () => {
+                tripStops = [];
+                updateTripUI();
+            });
+
+            // Expose remove function to window for inline HTML onclick
+            window.removeStop = function(id) {
+                const stopIndex = tripStops.findIndex(stop => stop.id === id);
+                if (stopIndex > -1) {
+                    tripStops.splice(stopIndex, 1);
+                    updateTripUI();
+                }
+            };
+
+            function updateTripUI() {
+                const list = document.getElementById('trip-list');
+                const count = document.getElementById('trip-count');
+                
+                count.textContent = `${tripStops.length} stops`;
+                mobileTripBadge.textContent = `${tripStops.length} stops`;
+                
+                if (tripStops.length > 0) {
+                    mobileTripBadge.classList.remove('hidden');
+                } else {
+                    mobileTripBadge.classList.add('hidden');
+                }
+
+                if (tripStops.length === 0) {
+                    list.innerHTML = '<div class="text-xs text-gray-400 text-center py-6 border-2 border-dashed border-gray-200 rounded-lg">No stops added yet. Tap map markers to build route.</div>';
+                    copyBtn.classList.add('hidden');
+                    clearBtn.classList.add('hidden');
+                } else {
+                    list.innerHTML = tripStops.map((stop, i) => `
+                        <div class="p-3 bg-white rounded-lg border border-gray-200 text-xs sm:text-sm flex items-start cursor-pointer hover:border-red-300 hover:bg-red-50/50 active:bg-red-50 transition-colors group shadow-2xs relative" onclick="removeStop(${stop.id})" title="Click to remove from trip">
+                            
+                            <!-- Stop Number Badge -->
+                            <span class="w-6 h-6 rounded-full bg-brand-600 text-white text-xs font-bold flex items-center justify-center mr-2.5 shrink-0 mt-0.5 group-hover:bg-red-500 transition-colors z-10">${i + 1}</span>
+                            
+                            <!-- Details -->
+                            <div class="flex-1 min-w-0">
+                                <div class="font-semibold text-gray-800 leading-tight truncate">${stop.company}</div>
+                                <div class="text-[11px] text-gray-500 mt-0.5">${stop.city} &middot; <span class="font-medium" style="color: ${topicColors[stop.topic]}">${stop.topic}</span></div>
+                            </div>
+
+                            <!-- Remove Icon -->
+                            <button class="p-1 text-gray-300 group-hover:text-red-500 transition-colors shrink-0 ml-1" aria-label="Remove stop">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                            
+                            <!-- Connecting line in UI -->
+                            ${i !== tripStops.length - 1 ? '<div class="absolute left-6 top-8 bottom-[-16px] w-0.5 bg-gray-200 z-0"></div>' : ''}
+                        </div>
+                    `).join('');
+                    copyBtn.classList.remove('hidden');
+                    clearBtn.classList.remove('hidden');
+                }
+                
+                // Update marker highlights
+                Object.values(mapMarkers).forEach(m => {
+                    const stopIndex = tripStops.findIndex(s => s.id === m.companyData.id);
+                    if (stopIndex > -1) {
+                        m.setStyle({ color: '#1e293b', weight: 4, fillOpacity: 1 });
+                    } else {
+                        m.setStyle({ color: '#ffffff', weight: 2, fillOpacity: 0.9 });
+                    }
+                });
+
+                // Draw dashed lines on map connecting the points
+                if (polylineLayer) {
+                    map.removeLayer(polylineLayer);
+                }
+                
+                if (tripStops.length > 1) {
+                    const latlngs = tripStops.map(s => [s.lat, s.lng]);
+                    
+                    polylineLayer = L.polyline(latlngs, {
+                        color: '#0284c7',
+                        weight: 3,
+                        opacity: 0.85,
+                        dashArray: '8, 8',
+                        lineJoin: 'round'
+                    }).addTo(map);
+                }
+            }
+
+            // Handle Resize
+            window.addEventListener('resize', () => {
+                map.invalidateSize();
+                if (!isMobile()) {
+                    sidebarDrawer.classList.remove('collapsed', 'expanded');
+                    drawerBackdrop.classList.add('hidden');
+                } else if (!isDrawerExpanded) {
+                    sidebarDrawer.classList.add('collapsed');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
