@@ -119,6 +119,30 @@
             box-shadow: 0 4px 12px rgba(99, 102, 241, 0.65);
         }
 
+        /* Hotel Marker Styling (square badge, distinct from round POI/airport markers) */
+        .hotel-marker-wrapper {
+            background: transparent;
+            border: none;
+        }
+        .hotel-marker-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            background-color: #d946ef;
+            color: white;
+            border-radius: 6px;
+            border: 2px solid white;
+            box-shadow: 0 3px 8px rgba(217, 70, 239, 0.45);
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .hotel-marker-container:hover {
+            transform: scale(1.18);
+            box-shadow: 0 4px 12px rgba(217, 70, 239, 0.65);
+        }
+
         /* Custom Route Hover Tooltip Styling */
         .leaflet-tooltip.custom-route-tooltip {
             background: transparent;
@@ -182,6 +206,11 @@
                     <option value="v1">Opt Itinerary V1</option>
                     <option value="v2">Opt Itinerary V2</option>
                 </select>
+                <!-- Hotel Layer Toggle Button -->
+                <button id="toggle-hotels-btn" class="px-3 sm:px-4 py-2 bg-white border border-fuchsia-300 text-fuchsia-700 rounded-lg shadow-sm hover:bg-fuchsia-50 active:bg-fuchsia-100 font-medium text-xs sm:text-sm transition-all duration-150 whitespace-nowrap flex items-center min-h-[38px]">
+                    <svg class="w-4 h-4 mr-1.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v11m0-11a2 2 0 012-2h2a2 2 0 012 2m-6 0h18M3 18h18M21 7v11M9 7v4m6-4v4m-9 4h.01M9 18v-3a2 2 0 012-2h2a2 2 0 012 2v3"></path></svg>
+                    <span id="toggle-hotels-btn-text">Show Hotels</span>
+                </button>
                 <!-- Trip Planning Toggle Button -->
                 <button id="plan-trip-btn" class="px-3 sm:px-4 py-2 bg-brand-600 text-white rounded-lg shadow-sm hover:bg-brand-700 active:bg-brand-800 font-medium text-xs sm:text-sm transition-all duration-150 whitespace-nowrap flex items-center min-h-[38px]">
                     <svg class="w-4 h-4 mr-1.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
@@ -397,9 +426,9 @@
                 address: "Minhang District, Shanghai", lat: 31.1979, lng: 121.3363
             },
             {
-                city: "Shanghai", company: "Shentong Metro Group", topic: "AI/Cloud",
+                city: "Shanghai", company: "Shentong Metro Group", topic: "RPC",
                 desc: "Shanghai's metro operator — network operations, maintenance & smart rail management.",
-                address: "No. 12 Hengshan Road, Xuhui District, Shanghai", lat: 31.2019, lng: 121.4459
+                address: "3rd Floor, Business Building, No. 12 Hengshan Road, Shanghai, China", lat: 31.2019, lng: 121.4459
             },
             {
                 city: "Hefei", company: "Hefei Xinqiao Airport (HFE)", topic: "Airport", isAirport: true,
@@ -655,6 +684,67 @@
             v2: { label: 'Opt Itinerary V2', data: itineraryV2 }
         };
 
+        // Hotel data (separate layer, own symbology, toggled independently of companies/POIs)
+        const hotels = [
+            { name: "维也纳国际酒店(深圳田寮长圳地铁站店)", city: "深圳市 Shenzhen", district: "光明区", address: "深圳市光明区光侨路1163号(近长圳地铁站550米)", lat: 22.7231, lng: 113.9212, tier: "高档型 (相当于四星级)", rating: "4.8 / 5.0", brand: "维也纳国际 (锦江集团)" },
+            { name: "中发旅馆", city: "深圳市 Shenzhen", district: "光明区", address: "深圳市光明区公明街道振明路158-6号", lat: 22.7765, lng: 113.8982, tier: "经济型 (1-2星)", rating: "3.8 / 5.0", brand: "独立快捷旅馆" },
+            { name: "公明华容静心园旅馆", city: "深圳市 Shenzhen", district: "光明区", address: "深圳市光明区公明街道长春路230号", lat: 22.7741, lng: 113.9015, tier: "经济型 (1-2星)", rating: "3.9 / 5.0", brand: "独立快捷旅馆" },
+            { name: "公明金都旅馆", city: "深圳市 Shenzhen", district: "光明区", address: "深圳市光明区公明街道茨田埔社区", lat: 22.7802, lng: 113.8893, tier: "经济型 (1-2星)", rating: "3.7 / 5.0", brand: "独立快捷旅馆" },
+            { name: "御禾宴酒店(合肥新桥机场店)", city: "合肥市 Hefei", district: "蜀山区", address: "安徽省合肥市蜀山区红卫北路高刘街道办事处旁", lat: 31.9812, lng: 116.9835, tier: "舒适型 (相当于三星级)", rating: "4.2 / 5.0", brand: "机场周边商旅酒店" },
+            { name: "合肥空港大酒店(新桥国际机场店)", city: "合肥市 Hefei", district: "肥西县/高新区", address: "安徽省合肥市建兰路与海棠花路交叉口(新桥机场内)", lat: 31.9892, lng: 116.9741, tier: "舒适型 (相当于三星级)", rating: "4.2 / 5.0", brand: "机场直属国资背景酒店" },
+            { name: "星河茗月酒店(新桥机场店)", city: "合肥市 Hefei", district: "蜀山区", address: "安徽省合肥市蜀山区硕金大街2号楼四楼", lat: 31.9795, lng: 116.9850, tier: "经济/舒适型 (2-3星)", rating: "4.3 / 5.0", brand: "机场周边商务酒店" },
+            { name: "合肥新桥国际机场希尔顿欢朋酒店", city: "合肥市 Hefei", district: "蜀山区", address: "安徽省合肥市蜀山区长岗街道金莲花路硕金大街2号", lat: 31.9791, lng: 116.9845, tier: "高档型 (相当于四星级)", rating: "4.7 / 5.0", brand: "希尔顿欢朋 (Hampton by Hilton)" },
+            { name: "维也纳国际酒店(杭州未来科技城店)", city: "杭州市 Hangzhou", district: "余杭区", address: "浙江省杭州市余杭区五常街道联创街368号", lat: 30.2783, lng: 120.0152, tier: "高档型 (相当于四星级)", rating: "4.6 / 5.0", brand: "维也纳国际 (锦江集团)" },
+            { name: "盈阳君亭酒店(杭州未来科技城阿里巴巴西溪园区店)", city: "杭州市 Hangzhou", district: "余杭区", address: "浙江省杭州市余杭区余杭塘路1993号关瑞大厦B座", lat: 30.2825, lng: 120.0210, tier: "高档型 (相当于四星级)", rating: "4.7 / 5.0", brand: "君亭酒店 (SSAW Hotels)" },
+            { name: "海友酒店(杭州阿里巴巴全球总部店)", city: "杭州市 Hangzhou", district: "余杭区", address: "浙江省杭州市余杭区五常街道联创街71-9号", lat: 30.2768, lng: 120.0195, tier: "经济型 (相当于二星级)", rating: "4.4 / 5.0", brand: "海友酒店 (华住集团)" },
+            { name: "苏州相城高铁新城开发区澄阳路亚朵酒店", city: "苏州市 Suzhou", district: "相城区", address: "江苏省苏州市相城区渭塘镇澄阳路2568号", lat: 31.4285, lng: 120.6432, tier: "高档型 (相当于四星级)", rating: "4.8 / 5.0", brand: "亚朵酒店 (Atour)" },
+            { name: "张家港市沙洲宾馆", city: "苏州市 Suzhou", district: "张家港市", address: "江苏省苏州市张家港市暨阳中路220号(市中心)", lat: 31.8692, lng: 120.5463, tier: "挂牌四星级 / 高档型", rating: "4.5 / 5.0", brand: "老牌政务/商务四星级宾馆" },
+            { name: "苏州石湖希尔顿欢朋酒店", city: "苏州市 Suzhou", district: "吴中区", address: "江苏省苏州市吴中区越溪镇滨溪路77号", lat: 31.2291, lng: 120.5894, tier: "高档型 (相当于四星级)", rating: "4.7 / 5.0", brand: "希尔顿欢朋 (Hampton by Hilton)" },
+            { name: "凌翼商务宾馆(上海高桥店)", city: "上海市 Shanghai", district: "浦东新区", address: "上海市浦东新区江东路1380弄4号", lat: 31.3562, lng: 121.5718, tier: "经济型 (相当于二星级)", rating: "4.4 / 5.0", brand: "独立商务宾馆" },
+            { name: "上海怡梦商务宾馆(浦东南路地铁站店)", city: "上海市 Shanghai", district: "浦东新区", address: "上海市浦东新区东昌路565号二楼", lat: 31.2338, lng: 121.5185, tier: "经济型 (相当于二星级)", rating: "4.1 / 5.0", brand: "独立商务宾馆" },
+            { name: "上海地园旅馆", city: "上海市 Shanghai", district: "金山区", address: "上海市金山区枫泾镇地园新村89号", lat: 30.8872, lng: 121.0125, tier: "经济型 (1-2星)", rating: "3.8 / 5.0", brand: "独立快捷旅馆" },
+            { name: "老街旅馆(上海盛桥店)", city: "上海市 Shanghai", district: "宝山区", address: "上海市宝山区盛桥老街7号", lat: 31.4589, lng: 121.3654, tier: "经济型 (1-2星)", rating: "3.7 / 5.0", brand: "独立快捷旅馆" },
+            { name: "海友酒店上海虹桥机场站新店", city: "上海市 Shanghai", district: "闵行/青浦", address: "上海市闵行区/青浦区沪青平公路307号(近航云路)", lat: 31.1712, lng: 121.3325, tier: "经济型 (相当于二星级)", rating: "4.4 / 5.0", brand: "海友酒店 (华住集团)" }
+        ];
+
+        // Luxury / 5-star hotel data (same hotel layer, hover tooltip shows details)
+        const luxuryHotels = [
+            { name: "Futian Shangri-La, Shenzhen", nameCn: "深圳福田香格里拉大酒店", city: "Shenzhen", address: "4088 Yitian Road, Futian District, Shenzhen, Guangdong (广东省深圳市福田区益田路4088号)", lat: 22.5375, lng: 114.0558, tier: "5 Stars", brand: "Shangri-La" },
+            { name: "The Ritz-Carlton, Shenzhen", nameCn: "深圳星河丽思卡尔顿酒店", city: "Shenzhen", address: "116 Fuhua Third Road, Futian District, Shenzhen, Guangdong (广东省深圳市福田区福华三路116号)", lat: 22.5332, lng: 114.0621, tier: "5 Stars", brand: "The Ritz-Carlton" },
+            { name: "The Langham, Shenzhen", nameCn: "深圳东海朗廷酒店", city: "Shenzhen", address: "7888 Shennan Boulevard, Futian District, Shenzhen, Guangdong (广东省深圳市福田区深南大道7888号)", lat: 22.5388, lng: 114.0251, tier: "5 Stars", brand: "Langham" },
+            { name: "Grand Hyatt Hefei", nameCn: "合肥君悦酒店", city: "Hefei", address: "No. 111 Qianshan Road, Shushan District, Hefei, Anhui (安徽省合肥市蜀山区潜山路111号)", lat: 31.8123, lng: 117.2285, tier: "5 Stars", brand: "Grand Hyatt" },
+            { name: "InterContinental Hefei", nameCn: "合肥洲际酒店", city: "Hefei", address: "No. 888 Qianshan Road, Shushan District, Hefei, Anhui (安徽省合肥市蜀山区潜山路888号)", lat: 31.8156, lng: 117.2341, tier: "5 Stars", brand: "InterContinental" },
+            { name: "The Langham, Hefei", nameCn: "合肥朗廷酒店", city: "Hefei", address: "No. 200 Huaining Road, Shushan District, Hefei, Anhui (安徽省合肥市蜀山区怀宁路200号)", lat: 31.8198, lng: 117.2223, tier: "5 Stars", brand: "Langham" },
+            { name: "Conrad Hangzhou", nameCn: "杭州康莱德酒店", city: "Hangzhou", address: "228 Xinye Road, Shangcheng District, Hangzhou, Zhejiang (浙江省杭州市上城区新业路228号)", lat: 30.2452, lng: 120.2105, tier: "5 Stars", brand: "Conrad" },
+            { name: "Park Hyatt Hangzhou", nameCn: "杭州柏悦酒店", city: "Hangzhou", address: "236 Qianjiang Road, Shangcheng District, Hangzhou, Zhejiang (浙江省杭州市上城区钱江路236号)", lat: 30.2471, lng: 120.2118, tier: "5 Stars", brand: "Park Hyatt" },
+            { name: "Four Seasons Hotel Hangzhou at West Lake", nameCn: "杭州西子湖四季酒店", city: "Hangzhou", address: "5 Lingyin Road, Xihu District, Hangzhou, Zhejiang (浙江省杭州市西湖区灵隐路5号)", lat: 30.2520, lng: 120.1281, tier: "5 Stars", brand: "Four Seasons" },
+            { name: "InterContinental Suzhou", nameCn: "苏州洲际酒店", city: "Suzhou", address: "No. 288 Wangdun Road, Suzhou Industrial Park, Suzhou, Jiangsu (江苏省苏州市工业园区旺墩路288号)", lat: 31.3195, lng: 120.7092, tier: "5 Stars", brand: "InterContinental" },
+            { name: "W Suzhou", nameCn: "苏州W酒店", city: "Suzhou", address: "Building 7, Suzhou Center, Suhui Road, Suzhou Industrial Park, Suzhou, Jiangsu (江苏省苏州市工业园区苏惠路苏州中心7号楼)", lat: 31.3150, lng: 120.6780, tier: "5 Stars", brand: "W Hotels" },
+            { name: "Hyatt Regency Suzhou", nameCn: "苏州凯悦酒店", city: "Suzhou", address: "No. 88 Huachi Street, Suzhou Industrial Park, Suzhou, Jiangsu (江苏省苏州市工业园区华池街88号)", lat: 31.3218, lng: 120.7075, tier: "5 Stars", brand: "Hyatt Regency" },
+            { name: "The Ritz-Carlton Shanghai, Pudong", nameCn: "上海浦东丽思卡尔顿酒店", city: "Shanghai", address: "No. 8 Century Avenue, Lujiazui, Pudong New Area, Shanghai (上海市浦东新区陆家嘴世纪大道8号)", lat: 31.2386, lng: 121.5015, tier: "5 Stars", brand: "The Ritz-Carlton" },
+            { name: "The Peninsula Shanghai", nameCn: "上海半岛酒店", city: "Shanghai", address: "No. 32 Zhongshan Dong Yi Road, Huangpu District, Shanghai (上海市黄浦区中山东一路32号)", lat: 31.2435, lng: 121.4883, tier: "5 Stars", brand: "Peninsula" },
+            { name: "Capella Shanghai, Jian Ye Li", nameCn: "上海建业里嘉佩乐酒店", city: "Shanghai", address: "No. 480 West Jianguo Road, Xuhui District, Shanghai (上海市徐汇区建国西路480号)", lat: 31.2052, lng: 121.4501, tier: "5 Stars", brand: "Capella" }
+        ];
+
+        // 4-star hotel data (same hotel layer, hover tooltip shows details)
+        const fourStarHotels = [
+            { name: "Courtyard by Marriott Shenzhen Bay", nameCn: "深圳湾万怡酒店", city: "Shenzhen", address: "No. 16 Keji South Road, Nanshan District, Shenzhen, Guangdong (广东省深圳市南山区科技南路16号)", lat: 22.5338, lng: 113.9547, tier: "4 Stars", brand: "Courtyard by Marriott" },
+            { name: "Novotel Shenzhen Watergate", nameCn: "深圳海景诺富特酒店", city: "Shenzhen", address: "No. 14 Shennan Avenue, Overseas Chinese Town, Nanshan District, Shenzhen, Guangdong (广东省深圳市南山区深南大道14号)", lat: 22.5361, lng: 113.9856, tier: "4 Stars", brand: "Novotel" },
+            { name: "Atour Hotel Shenzhen CBD Futian Metro Station", nameCn: "深圳CBD福田地铁站亚朵酒店", city: "Shenzhen", address: "6008 Shennan Avenue, Futian District, Shenzhen, Guangdong (广东省深圳市福田区深南大道6008号)", lat: 22.5391, lng: 114.0495, tier: "4 Stars", brand: "Atour" },
+            { name: "Mercure Hefei Sunac", nameCn: "合肥融创美居酒店", city: "Hefei", address: "No. 788 Nanning Road, Baohe District, Hefei, Anhui (安徽省合肥市包河区南宁路788号)", lat: 31.7056, lng: 117.2912, tier: "4 Stars", brand: "Mercure" },
+            { name: "Holiday Inn Express Hefei High-Tech", nameCn: "合肥高新区智选假日酒店", city: "Hefei", address: "No. 800 Innovation Avenue, Shushan District, Hefei, Anhui (安徽省合肥市蜀山区创新大道800号)", lat: 31.8385, lng: 117.1352, tier: "4 Stars", brand: "Holiday Inn Express" },
+            { name: "Atour Hotel Hefei Swan Lake", nameCn: "合肥天鹅湖高铁南站亚朵酒店", city: "Hefei", address: "No. 222 Qianshan Road, Shushan District, Hefei, Anhui (安徽省合肥市蜀山区潜山路222号)", lat: 31.8152, lng: 117.2268, tier: "4 Stars", brand: "Atour" },
+            { name: "Courtyard by Marriott Hangzhou Qianjiang", nameCn: "杭州钱江新城万怡酒店", city: "Hangzhou", address: "No. 98 Fuchun Road, Shangcheng District, Hangzhou, Zhejiang (浙江省杭州市上城区富春路98号)", lat: 30.2312, lng: 120.1985, tier: "4 Stars", brand: "Courtyard by Marriott" },
+            { name: "Mercure Hangzhou West Lake", nameCn: "杭州西湖美居酒店", city: "Hangzhou", address: "No. 3 Hongxing Road, Shangcheng District, Hangzhou, Zhejiang (浙江省杭州市上城区宏兴路3号)", lat: 30.2415, lng: 120.1718, tier: "4 Stars", brand: "Mercure" },
+            { name: "Novotel Hangzhou East Station", nameCn: "杭州东站诺富特酒店", city: "Hangzhou", address: "No. 195 Dongning Road, Shangcheng District, Hangzhou, Zhejiang (浙江省杭州市上城区东宁路195号)", lat: 30.2931, lng: 120.2185, tier: "4 Stars", brand: "Novotel" },
+            { name: "Courtyard by Marriott Suzhou", nameCn: "苏州万怡酒店", city: "Suzhou", address: "No. 258 Xinghai Street, Suzhou Industrial Park, Suzhou, Jiangsu (江苏省苏州市工业园区星海街258号)", lat: 31.3168, lng: 120.6721, tier: "4 Stars", brand: "Courtyard by Marriott" },
+            { name: "Novotel Suzhou SIP", nameCn: "苏州工业园区诺富特酒店", city: "Suzhou", address: "No. 688 Suzhou Avenue East, Suzhou Industrial Park, Suzhou, Jiangsu (江苏省苏州市工业园区苏州大道东688号)", lat: 31.3245, lng: 120.7258, tier: "4 Stars", brand: "Novotel" },
+            { name: "Atour Hotel Suzhou SIP Jinji Lake Expo Center", nameCn: "苏州工业园区金鸡湖博览中心亚朵酒店", city: "Suzhou", address: "No. 158 Wangdun Road, Suzhou Industrial Park, Suzhou, Jiangsu (江苏省苏州市工业园区旺墩路158号)", lat: 31.3182, lng: 120.7015, tier: "4 Stars", brand: "Atour" },
+            { name: "Mercure Shanghai Hongqiao Railway Station", nameCn: "上海虹桥站美居酒店", city: "Shanghai", address: "Building 5, Xiexin Center, Lane 683 Shenhong Road, Minhang District, Shanghai (上海市闵行区申虹路683弄协信中心5号楼)", lat: 31.1965, lng: 121.3158, tier: "4 Stars", brand: "Mercure" },
+            { name: "Courtyard by Marriott Shanghai Central", nameCn: "上海静安万怡酒店", city: "Shanghai", address: "No. 338 Hengfeng Road, Jing'an District, Shanghai (上海市静安区恒丰路338号)", lat: 31.2468, lng: 121.4552, tier: "4 Stars", brand: "Courtyard by Marriott" },
+            { name: "Atour Hotel Shanghai People's Square", nameCn: "上海人民广场亚朵酒店", city: "Shanghai", address: "No. 120 Jiujiang Road, Huangpu District, Shanghai (上海市黄浦区九江路120号)", lat: 31.2381, lng: 121.4825, tier: "4 Stars", brand: "Atour" }
+        ];
+
         document.addEventListener('DOMContentLoaded', () => {
             
             let isPlanning = false;
@@ -700,6 +790,15 @@
                 `;
                 legendContainer.appendChild(item);
             }
+
+            // Hotel legend entry (separate symbology, own toggle)
+            const hotelLegendItem = document.createElement('div');
+            hotelLegendItem.className = 'flex items-center space-x-2 text-xs sm:text-sm text-gray-700 bg-gray-50/60 p-1.5 rounded-md border border-gray-100';
+            hotelLegendItem.innerHTML = `
+                <span class="w-3 h-3 rounded-[3px] inline-block shrink-0" style="background-color: #d946ef; box-shadow: 0 0 0 2px white, 0 0 0 3px #d946ef40;"></span>
+                <span class="font-medium truncate">Hotel (toggle in header)</span>
+            `;
+            legendContainer.appendChild(hotelLegendItem);
 
             // Generate City Filter Jump Tags
             const cityTagsContainer = document.getElementById('city-tags-container');
@@ -966,6 +1065,93 @@
             // Initial bounds fitting
             const group = new L.featureGroup(Object.values(mapMarkers));
             map.fitBounds(group.getBounds().pad(0.12));
+
+            // Hotel Layer (separate symbology, hidden by default, toggled independently)
+            const hotelLayerGroup = L.layerGroup();
+            let hotelsVisible = false;
+
+            const hotelIcon = L.divIcon({
+                className: 'hotel-marker-wrapper',
+                html: `
+                    <div class="hotel-marker-container" title="Hotel">
+                        <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                            <path d="M3 18v-9a1 1 0 011-1h4a1 1 0 011 1v2h6v-2a1 1 0 011-1h4a1 1 0 011 1v9h-2v-2H5v2H3zm5-7H6v3h2v-3zm10 0h-2v3h2v-3zM7 20h10v1H7v-1z"/>
+                        </svg>
+                    </div>
+                `,
+                iconSize: [26, 26],
+                iconAnchor: [13, 13],
+                popupAnchor: [0, -13]
+            });
+
+            const allHotels = hotels.concat(luxuryHotels, fourStarHotels);
+
+            allHotels.forEach((hotel) => {
+                const marker = L.marker([hotel.lat, hotel.lng], { icon: hotelIcon });
+
+                const cardContent = `
+                    <div class="p-3.5 bg-white rounded-xl overflow-hidden">
+                        <div class="flex items-center space-x-1.5 mb-1.5">
+                            <span class="w-2.5 h-2.5 rounded-[2px] shrink-0" style="background-color: #d946ef;"></span>
+                            <span class="text-[10px] font-bold uppercase tracking-wider" style="color: #d946ef;">Hotel &middot; ${hotel.tier}</span>
+                        </div>
+                        <h3 class="font-bold text-gray-900 text-base leading-snug mb-1">${hotel.name}${hotel.nameCn ? ` <span class="text-sm font-normal text-gray-500">(${hotel.nameCn})</span>` : ''}</h3>
+                        <p class="text-xs text-gray-500 mb-2 flex items-center">
+                            <svg class="w-3.5 h-3.5 mr-1 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
+                            ${hotel.city} &middot; <span class="truncate">${hotel.address}</span>
+                        </p>
+                        <div class="text-xs text-gray-700 bg-gray-50 p-2.5 rounded-lg border border-gray-100 leading-relaxed space-y-1">
+                            ${hotel.rating ? `<div><span class="font-semibold">Rating:</span> ${hotel.rating}</div>` : ''}
+                            <div><span class="font-semibold">Brand/Notes:</span> ${hotel.brand}</div>
+                        </div>
+                    </div>
+                `;
+
+                const tooltipContent = `
+                    <div class="p-2.5 max-w-[240px]">
+                        <div class="text-[10px] font-bold uppercase tracking-wider mb-1" style="color: #d946ef;">Hotel &middot; ${hotel.tier}</div>
+                        <div class="font-bold text-gray-900 text-sm leading-snug">${hotel.name}${hotel.nameCn ? ` <span class="font-normal text-gray-500">(${hotel.nameCn})</span>` : ''}</div>
+                        <div class="text-xs text-gray-500 mt-1">${hotel.city} &middot; ${hotel.address}</div>
+                        ${hotel.rating ? `<div class="text-xs text-gray-700 mt-1"><span class="font-semibold">Rating:</span> ${hotel.rating}</div>` : ''}
+                        <div class="text-xs text-gray-700 mt-0.5"><span class="font-semibold">Brand/Notes:</span> ${hotel.brand}</div>
+                    </div>
+                `;
+
+                marker.bindPopup(cardContent, {
+                    className: 'custom-tooltip',
+                    offset: [0, -8],
+                    closeButton: false,
+                    autoPan: true
+                });
+
+                marker.bindTooltip(tooltipContent, {
+                    className: 'custom-tooltip',
+                    direction: 'top',
+                    offset: [0, -13],
+                    opacity: 1,
+                    sticky: false
+                });
+
+                marker.addTo(hotelLayerGroup);
+            });
+
+            // Hotel Toggle Button
+            const toggleHotelsBtn = document.getElementById('toggle-hotels-btn');
+            const toggleHotelsBtnText = document.getElementById('toggle-hotels-btn-text');
+            toggleHotelsBtn.addEventListener('click', () => {
+                hotelsVisible = !hotelsVisible;
+                if (hotelsVisible) {
+                    hotelLayerGroup.addTo(map);
+                    toggleHotelsBtnText.textContent = 'Hide Hotels';
+                    toggleHotelsBtn.classList.remove('bg-white', 'text-fuchsia-700', 'hover:bg-fuchsia-50');
+                    toggleHotelsBtn.classList.add('bg-fuchsia-600', 'text-white', 'hover:bg-fuchsia-700');
+                } else {
+                    map.removeLayer(hotelLayerGroup);
+                    toggleHotelsBtnText.textContent = 'Show Hotels';
+                    toggleHotelsBtn.classList.remove('bg-fuchsia-600', 'text-white', 'hover:bg-fuchsia-700');
+                    toggleHotelsBtn.classList.add('bg-white', 'text-fuchsia-700', 'hover:bg-fuchsia-50');
+                }
+            });
 
             // DOM Element References
             const planBtn = document.getElementById('plan-trip-btn');
