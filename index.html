@@ -118,6 +118,17 @@
             transform: scale(1.18);
             box-shadow: 0 4px 12px rgba(99, 102, 241, 0.65);
         }
+
+        /* Custom Route Hover Tooltip Styling */
+        .leaflet-tooltip.custom-route-tooltip {
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            padding: 0;
+        }
+        .leaflet-tooltip.custom-route-tooltip:before {
+            display: none;
+        }
         
         /* Map container height */
         #map {
@@ -165,6 +176,12 @@
                 <span class="hidden lg:inline-flex items-center rounded-md bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-900 ring-1 ring-inset ring-brand-500/20">
                     Hover/Tap dots for details
                 </span>
+                <!-- Planner Mode Selector -->
+                <select id="planner-mode-select" class="hidden sm:block px-2 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-xs sm:text-sm font-medium min-h-[38px] focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    <option value="manual">Manual Planner</option>
+                    <option value="v1">Opt Itinerary V1</option>
+                    <option value="v2">Opt Itinerary V2</option>
+                </select>
                 <!-- Trip Planning Toggle Button -->
                 <button id="plan-trip-btn" class="px-3 sm:px-4 py-2 bg-brand-600 text-white rounded-lg shadow-sm hover:bg-brand-700 active:bg-brand-800 font-medium text-xs sm:text-sm transition-all duration-150 whitespace-nowrap flex items-center min-h-[38px]">
                     <svg class="w-4 h-4 mr-1.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
@@ -273,6 +290,7 @@
 
         // City Coordinates for Jump Navigation
         const cityCoords = {
+            "Singapore": [1.3521, 103.8198, 11],
             "Shenzhen": [22.65, 114.15, 10],
             "Hangzhou": [30.25, 120.15, 11],
             "Shanghai": [31.18, 121.45, 10],
@@ -354,6 +372,11 @@
                 address: "Feixi County, Hefei, Anhui, China, 231200", lat: 31.687100, lng: 117.204586 
             },
             { 
+                city: "Singapore", company: "Singapore Changi Airport (SIN)", topic: "Airport", isAirport: true,
+                desc: "Major global air transit hub connecting Singapore and Southeast Asia with China.", 
+                address: "Airport Boulevard, Changi, Singapore", lat: 1.3644, lng: 103.9915 
+            },
+            { 
                 city: "Shenzhen", company: "Shenzhen Bao'an Airport (SZX)", topic: "Airport", isAirport: true,
                 desc: "Major international aviation hub serving Shenzhen and the Pearl River Delta.", 
                 address: "Bao'an District, Shenzhen, Guangdong", lat: 22.6393, lng: 113.8107 
@@ -368,20 +391,282 @@
                 desc: "Main international aviation hub for Shanghai and East Asia.", 
                 address: "Pudong New Area, Shanghai", lat: 31.1443, lng: 121.8083 
             },
-            { 
+            {
                 city: "Shanghai", company: "Shanghai Hongqiao Airport (SHA)", topic: "Airport", isAirport: true,
-                desc: "Major domestic & regional hub integrated with Hongqiao High-Speed Rail Terminal.", 
-                address: "Minhang District, Shanghai", lat: 31.1979, lng: 121.3363 
+                desc: "Major domestic & regional hub integrated with Hongqiao High-Speed Rail Terminal.",
+                address: "Minhang District, Shanghai", lat: 31.1979, lng: 121.3363
+            },
+            {
+                city: "Shanghai", company: "Shentong Metro Group", topic: "AI/Cloud",
+                desc: "Shanghai's metro operator — network operations, maintenance & smart rail management.",
+                address: "No. 12 Hengshan Road, Xuhui District, Shanghai", lat: 31.2019, lng: 121.4459
+            },
+            {
+                city: "Hefei", company: "Hefei Xinqiao Airport (HFE)", topic: "Airport", isAirport: true,
+                desc: "Main international airport serving Hefei and Anhui province.",
+                address: "Shuangfeng Town, Chang'an Ave., Hefei, Anhui", lat: 31.7800, lng: 116.9778
             }
         ];
+
+        // ID references into `companies` (assigned index order above, 0-based)
+        const COID = {
+            BYD: 0, SZ_METRO_DEPOT: 1, ALI_CLOUD_VALLEY: 2, UNITREE: 3, DEEP_ROBOTICS: 4,
+            HUAWEI_LIANQIU: 7, STEC: 9, SZ_CHAOYANGLU_DEPOT: 10, HUAWEI_OPEN_LAB: 11,
+            HARMONY_HEFEI: 13, SIN: 14, SZX: 15, PVG: 17, SHENTONG: 19, HFE: 20
+        };
+
+        // Preset "Opt Itinerary V2" schedule (read-only), built from itinerary V2 source doc.
+        // Dates inferred sequentially from D0 = 23 Aug (source CSV dates were inconsistent).
+        const itineraryV2 = [
+            { day: 'D0', date: '23 Aug', accommodation: 'Shenzhen', stops: [
+                { type: 'flight', ampm: 'PM', title: 'Singapore → Shenzhen', flightNo: 'CZ 8118', details: 'Depart 1:25 PM · Arrive 6:15 PM', fromId: COID.SIN, toId: COID.SZX }
+            ]},
+            { day: 'D1', date: '24 Aug', accommodation: 'Shenzhen', stops: [
+                { type: 'visit', ampm: 'AM', poc: 'Liu Kun (Puzhen)', note: "Meeting Puzhen's Data Governance Team.", id: COID.SZ_METRO_DEPOT },
+                { type: 'visit', ampm: 'PM', poc: 'Shuya (Huawei) or Jiufu (Alibaba)', id: COID.BYD }
+            ]},
+            { day: 'D2', date: '25 Aug', accommodation: 'Hefei', stops: [
+                { type: 'flight', ampm: 'AM', title: 'Shenzhen → Hefei', flightNo: 'ZH 9943', details: 'Depart 8:30 · Arrive 10:45', fromId: COID.SZX, toId: COID.HFE },
+                { type: 'visit', ampm: 'PM', poc: 'Shuya (Huawei)', id: COID.HARMONY_HEFEI, nameOverride: 'Hong Meng (鸿蒙) Factory' }
+            ]},
+            { day: 'D3', date: '26 Aug', accommodation: 'Hangzhou', stops: [
+                { type: 'transport', ampm: 'AM', title: 'Hefei → Hangzhou (HSR)', flightNo: 'G7614', details: 'Depart 7:40 · Arrive 10:08' },
+                { type: 'visit', ampm: 'PM', poc: 'Jiu Fu (Alibaba)', id: COID.UNITREE },
+                { type: 'visit', ampm: 'PM', poc: 'Jiu Fu (Alibaba)', id: COID.DEEP_ROBOTICS }
+            ]},
+            { day: 'D4', date: '27 Aug', accommodation: 'Shanghai', stops: [
+                { type: 'visit', ampm: 'AM', poc: 'Jiu Fu (Alibaba)', id: COID.ALI_CLOUD_VALLEY },
+                { type: 'transport', ampm: 'PM', title: 'Hangzhou → Shanghai (HSR/Car)', flightNo: 'G1584', details: 'Depart 13:07 · Arrive 14:00' },
+                { type: 'visit', ampm: 'PM', poc: 'Li Shijiang (Weibao)', id: COID.SHENTONG }
+            ]},
+            { day: 'D5', date: '28 Aug', accommodation: 'Shanghai', stops: [
+                { type: 'transport', ampm: 'AM', title: 'Shanghai → Suzhou (Car, ~1.5hr)' },
+                { type: 'visit', ampm: 'AM', poc: 'Liu Kun (Puzhen)', id: COID.SZ_CHAOYANGLU_DEPOT },
+                { type: 'visit', ampm: 'PM', poc: 'Shuya (Huawei)', id: COID.HUAWEI_OPEN_LAB },
+                { type: 'transport', ampm: 'PM', title: 'Suzhou → Shanghai (Car, ~1.5hr, evening)' }
+            ]},
+            { day: 'D6', date: '29 Aug', accommodation: 'Shanghai', stops: [
+                { type: 'transport', ampm: 'AM', title: 'Shanghai (Car ~1hr)' },
+                { type: 'visit', ampm: 'AM', poc: 'Liu Kun (Puzhen)', id: COID.HUAWEI_LIANQIU },
+                { type: 'visit', ampm: 'PM', poc: 'Xu Yang (STEC)', id: COID.STEC }
+            ]},
+            { day: 'D7', date: '30 Aug', accommodation: 'Return to SG', stops: [
+                { type: 'flight', ampm: 'AM', title: 'Shanghai → Singapore', flightNo: 'SQ 825', details: 'Depart 12:35 AM · Arrive 5:55 AM', fromId: COID.PVG, toId: COID.SIN }
+            ]}
+        ];
+
+        // Preset "Opt Itinerary V1" schedule (read-only), built from itinerary V1 source doc.
+        // Diverges from V2 from D4 onward — Hangzhou → Suzhou HSR, Suzhou → Shanghai car (no separate Suzhou-only day).
+        // Dates inferred sequentially from D0 = 23 Aug (source CSV dates were inconsistent).
+        const itineraryV1 = [
+            { day: 'D0', date: '23 Aug', accommodation: 'Shenzhen', stops: [
+                { type: 'flight', ampm: 'PM', title: 'Singapore → Shenzhen', flightNo: 'CZ 8118', details: 'Depart 1:25 PM · Arrive 6:15 PM', fromId: COID.SIN, toId: COID.SZX }
+            ]},
+            { day: 'D1', date: '24 Aug', accommodation: 'Shenzhen', stops: [
+                { type: 'visit', ampm: 'AM', poc: 'Liu Kun (Puzhen)', note: "Meeting Puzhen's Data Governance Team.", id: COID.SZ_METRO_DEPOT },
+                { type: 'visit', ampm: 'PM', poc: 'Shuya (Huawei) or Jiufu (Alibaba)', id: COID.BYD }
+            ]},
+            { day: 'D2', date: '25 Aug', accommodation: 'Hefei', stops: [
+                { type: 'flight', ampm: 'AM', title: 'Shenzhen → Hefei', flightNo: 'ZH 9943', details: 'Depart 8:30 · Arrive 10:45', fromId: COID.SZX, toId: COID.HFE },
+                { type: 'visit', ampm: 'PM', poc: 'Shuya (Huawei)', id: COID.HARMONY_HEFEI, nameOverride: 'Hong Meng (鸿蒙) Factory' }
+            ]},
+            { day: 'D3', date: '26 Aug', accommodation: 'Hangzhou', stops: [
+                { type: 'transport', ampm: 'AM', title: 'Hefei → Hangzhou (HSR)', flightNo: 'G7614', details: 'Depart 7:40 · Arrive 10:08' },
+                { type: 'visit', ampm: 'PM', poc: 'Jiu Fu (Alibaba)', id: COID.UNITREE },
+                { type: 'visit', ampm: 'PM', poc: 'Jiu Fu (Alibaba)', id: COID.DEEP_ROBOTICS }
+            ]},
+            { day: 'D4', date: '27 Aug', accommodation: 'Suzhou', stops: [
+                { type: 'visit', ampm: 'AM', poc: 'Jiu Fu (Alibaba)', id: COID.ALI_CLOUD_VALLEY },
+                { type: 'transport', ampm: 'PM', title: 'Hangzhou → Suzhou (HSR)', flightNo: 'G7744', details: 'Depart 13:20 · Arrive 14:10' },
+                { type: 'visit', ampm: 'PM', poc: 'Shuya (Huawei)', id: COID.HUAWEI_OPEN_LAB }
+            ]},
+            { day: 'D5', date: '28 Aug', accommodation: 'Shanghai', stops: [
+                { type: 'visit', ampm: 'AM', poc: 'Liu Kun (Puzhen)', id: COID.SZ_CHAOYANGLU_DEPOT },
+                { type: 'transport', ampm: 'PM', title: 'Suzhou → Shanghai (Car)' },
+                { type: 'visit', ampm: 'PM', poc: 'Li Shijiang (Weibao)', id: COID.SHENTONG }
+            ]},
+            { day: 'D6', date: '29 Aug', accommodation: 'Shanghai', stops: [
+                { type: 'visit', ampm: 'AM', poc: 'Liu Kun (Puzhen)', id: COID.HUAWEI_LIANQIU },
+                { type: 'visit', ampm: 'PM', poc: 'Xu Yang (STEC)', id: COID.STEC }
+            ]},
+            { day: 'D7', date: '30 Aug', accommodation: 'Return to SG', stops: [
+                { type: 'flight', ampm: 'AM', title: 'Shanghai → Singapore', flightNo: 'SQ 825', details: 'Depart 12:35 AM · Arrive 5:55 AM', fromId: COID.PVG, toId: COID.SIN }
+            ]}
+        ];
+
+        // Distance & travel time lookup database (Flight, HSR, Car)
+        const ROUTE_TRAVEL_DATA = {
+            "Singapore-Shenzhen": {
+                title: "Singapore ↔ Shenzhen",
+                distance: "~2,600 km",
+                flight: { available: true, dist: "~2,600 km", time: "4h 15m – 4h 50m", note: "Direct Flight (CZ 8118)" },
+                hsr:    { available: false, note: "No direct rail link" },
+                car:    { available: false, note: "Overland border crossing (>3,800 km)" }
+            },
+            "Hefei-Shenzhen": {
+                title: "Shenzhen ↔ Hefei",
+                distance: "~1,080 km",
+                flight: { available: true, dist: "~1,080 km", time: "2h 15m", note: "Direct Flight (ZH 9943)" },
+                hsr:    { available: true, dist: "~1,200 km", time: "6h 15m – 7h 30m", note: "Ganzhou-Shenzhen HSR" },
+                car:    { available: true, dist: "~1,200 km", time: "12h 30m – 14h 00m", note: "Via G4 / G35 Hwy" }
+            },
+            "Hangzhou-Hefei": {
+                title: "Hefei ↔ Hangzhou",
+                distance: "~390 km",
+                flight: { available: false, note: "No direct commercial flight" },
+                hsr:    { available: true, dist: "~390 km", time: "2h 10m – 2h 30m", note: "Direct HSR (G7614)" },
+                car:    { available: true, dist: "~400 km", time: "4h 30m – 5h 15m", note: "Via G50 Expressway" }
+            },
+            "Hangzhou-Suzhou": {
+                title: "Hangzhou ↔ Suzhou",
+                distance: "~160 km",
+                flight: { available: false, note: "No Suzhou commercial airport" },
+                hsr:    { available: true, dist: "~160–190 km", time: "45m – 1h 10m", note: "Direct HSR (G7744)" },
+                car:    { available: true, dist: "~155 km", time: "2h 00m – 2h 30m", note: "Via G1522 Expressway" }
+            },
+            "Hangzhou-Shanghai": {
+                title: "Hangzhou ↔ Shanghai",
+                distance: "~160 km",
+                flight: { available: false, note: "No regional flight" },
+                hsr:    { available: true, dist: "~160–175 km", time: "45m – 1h 05m", note: "Direct HSR (G1584)" },
+                car:    { available: true, dist: "~175 km", time: "2h 15m – 2h 45m", note: "Via G60 Expressway" }
+            },
+            "Shanghai-Suzhou": {
+                title: "Suzhou ↔ Shanghai",
+                distance: "~90 km",
+                flight: { available: false, note: "Adjacent cities" },
+                hsr:    { available: true, dist: "~85–100 km", time: "25m – 35m", note: "Shanghai-Nanjing HSR" },
+                car:    { available: true, dist: "~90–100 km", time: "1h 15m – 1h 45m", note: "Direct Private Car / Taxi" }
+            },
+            "Shanghai-Singapore": {
+                title: "Shanghai ↔ Singapore",
+                distance: "~3,800 km",
+                flight: { available: true, dist: "~3,800 km", time: "5h 15m – 5h 40m", note: "Direct Flight (SQ 825)" },
+                hsr:    { available: false, note: "No direct rail link" },
+                car:    { available: false, note: "Overland (>4,500 km)" }
+            }
+        };
+
+        function haversineDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        }
+
+        function getRouteTravelData(fromCo, toCo) {
+            if (!fromCo || !toCo) return null;
+            const cities = [fromCo.city.trim(), toCo.city.trim()].sort();
+            const key = `${cities[0]}-${cities[1]}`;
+            if (ROUTE_TRAVEL_DATA[key]) {
+                return ROUTE_TRAVEL_DATA[key];
+            }
+            if (fromCo.city === toCo.city) {
+                const dKm = Math.max(5, Math.round(haversineDistance(fromCo.lat, fromCo.lng, toCo.lat, toCo.lng) * 1.3));
+                const driveMins = Math.max(15, Math.round(dKm * 2.2));
+                return {
+                    title: `${fromCo.city} Local Transfer (${fromCo.company} ↔ ${toCo.company})`,
+                    distance: `~${dKm} km`,
+                    flight: { available: false, note: "Local intra-city transfer" },
+                    hsr:    { available: false, note: "Local Metro / Rail transit" },
+                    car:    { available: true, dist: `~${dKm} km`, time: `~${driveMins} mins`, note: "Private Car / Taxi" }
+                };
+            }
+            const dKm = Math.round(haversineDistance(fromCo.lat, fromCo.lng, toCo.lat, toCo.lng) * 1.25);
+            return {
+                title: `${fromCo.city} ↔ ${toCo.city}`,
+                distance: `~${dKm} km`,
+                flight: { available: false, note: "N/A" },
+                hsr:    { available: true, dist: `~${dKm} km`, time: `~${Math.round(dKm / 220 * 60)} mins`, note: "Estimated HSR" },
+                car:    { available: true, dist: `~${dKm} km`, time: `~${Math.round(dKm / 80)} hrs`, note: "Estimated Driving" }
+            };
+        }
+
+        function createRouteTooltipHtml(data, activeType) {
+            if (!data) return '';
+            const flightHtml = data.flight.available 
+                ? `<div class="flex items-center justify-between text-xs py-1 border-b border-gray-100 ${activeType === 'flight' ? 'font-bold text-indigo-700 bg-indigo-50/90 -mx-1 px-1.5 rounded' : 'text-gray-700'}">
+                    <span class="flex items-center gap-1.5">
+                        <span>✈️</span> <span class="font-semibold">Flight</span>
+                    </span>
+                    <div class="text-right">
+                        <span class="font-bold text-indigo-900">${data.flight.time}</span>
+                        <span class="text-[10px] text-gray-500 block leading-tight">${data.flight.dist} &middot; ${data.flight.note}</span>
+                    </div>
+                   </div>`
+                : `<div class="flex items-center justify-between text-xs py-1 border-b border-gray-100 text-gray-400">
+                    <span class="flex items-center gap-1.5 opacity-60"><span>✈️</span> Flight</span>
+                    <span class="text-[10px] italic">${data.flight.note || 'N/A'}</span>
+                   </div>`;
+
+            const hsrHtml = data.hsr.available 
+                ? `<div class="flex items-center justify-between text-xs py-1 border-b border-gray-100 ${activeType === 'hsr' ? 'font-bold text-emerald-700 bg-emerald-50/90 -mx-1 px-1.5 rounded' : 'text-gray-700'}">
+                    <span class="flex items-center gap-1.5">
+                        <span>🚄</span> <span class="font-semibold">HSR Train</span>
+                    </span>
+                    <div class="text-right">
+                        <span class="font-bold text-emerald-900">${data.hsr.time}</span>
+                        <span class="text-[10px] text-gray-500 block leading-tight">${data.hsr.dist} &middot; ${data.hsr.note}</span>
+                    </div>
+                   </div>`
+                : `<div class="flex items-center justify-between text-xs py-1 border-b border-gray-100 text-gray-400">
+                    <span class="flex items-center gap-1.5 opacity-60"><span>🚄</span> HSR</span>
+                    <span class="text-[10px] italic">${data.hsr.note || 'N/A'}</span>
+                   </div>`;
+
+            const carHtml = data.car.available 
+                ? `<div class="flex items-center justify-between text-xs py-1 ${activeType === 'day' ? 'font-bold text-sky-700 bg-sky-50/90 -mx-1 px-1.5 rounded' : 'text-gray-700'}">
+                    <span class="flex items-center gap-1.5">
+                        <span>🚗</span> <span class="font-semibold">Car / Taxi</span>
+                    </span>
+                    <div class="text-right">
+                        <span class="font-bold text-sky-900">${data.car.time}</span>
+                        <span class="text-[10px] text-gray-500 block leading-tight">${data.car.dist} &middot; ${data.car.note}</span>
+                    </div>
+                   </div>`
+                : `<div class="flex items-center justify-between text-xs py-1 text-gray-400">
+                    <span class="flex items-center gap-1.5 opacity-60"><span>🚗</span> Car</span>
+                    <span class="text-[10px] italic">${data.car.note || 'N/A'}</span>
+                   </div>`;
+
+            return `
+                <div class="p-3 bg-white/95 backdrop-blur-md rounded-xl shadow-xl border border-gray-200 min-w-[260px] max-w-[310px] text-left">
+                    <div class="flex items-center justify-between mb-2 pb-1.5 border-b border-gray-200">
+                        <h4 class="text-xs font-bold text-gray-900 flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                            ${data.title}
+                        </h4>
+                        <span class="text-[10px] font-bold px-2 py-0.5 bg-brand-50 text-brand-700 rounded-full border border-brand-200">${data.distance}</span>
+                    </div>
+                    <div class="space-y-0.5">
+                        ${flightHtml}
+                        ${hsrHtml}
+                        ${carHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        const ITINERARIES = {
+            v1: { label: 'Opt Itinerary V1', data: itineraryV1 },
+            v2: { label: 'Opt Itinerary V2', data: itineraryV2 }
+        };
 
         document.addEventListener('DOMContentLoaded', () => {
             
             let isPlanning = false;
+            let plannerMode = 'manual'; // 'manual' | 'v2'
             let tripStops = [];
             let polylineLayer = null;
             let mapMarkers = {};
             let isDrawerExpanded = false;
+            let v2RouteMarkers = [];
+            let v2RouteLines = []; // { line, fromId, toId, type }
+            let v2EdgesByMarker = {}; // id -> [edge, ...]
+            let v2HighlightedIds = new Set();
 
             // Mobile detection helper
             const isMobile = () => window.innerWidth < 768;
@@ -506,6 +791,21 @@
                     marker.on('mouseout', function () { if (!isMobile()) this.setRadius(markerRadius); });
                 }
 
+                // Itinerary mode: hovering a routed marker highlights its connected route legs
+                marker.on('mouseover', function () {
+                    if (ITINERARIES[plannerMode] && v2HighlightedIds.has(data.id)) {
+                        const connected = v2EdgesByMarker[data.id] || [];
+                        const activeMarkers = new Set([data.id]);
+                        connected.forEach(e => { activeMarkers.add(e.fromId); activeMarkers.add(e.toId); });
+                        applyHoverFocus(activeMarkers, new Set(connected));
+                    }
+                });
+                marker.on('mouseout', function () {
+                    if (ITINERARIES[plannerMode] && v2HighlightedIds.has(data.id)) {
+                        clearHoverFocus();
+                    }
+                });
+
                 // Create Persistent Label Element
                 const labelEl = document.createElement('div');
                 labelEl.className = 'poi-persistent-label';
@@ -528,7 +828,7 @@
                     e.stopPropagation();
                     map.panTo([data.lat, data.lng], { animate: true, duration: 0.4 });
                     marker.openPopup();
-                    if (isPlanning) {
+                    if (isPlanning && plannerMode === 'manual') {
                         const stopIndex = tripStops.findIndex(stop => stop.id === data.id);
                         if (stopIndex > -1) {
                             tripStops.splice(stopIndex, 1);
@@ -536,6 +836,20 @@
                             tripStops.push(data);
                         }
                         updateTripUI();
+                    }
+                });
+
+                labelEl.addEventListener('mouseenter', () => {
+                    if (ITINERARIES[plannerMode] && v2HighlightedIds.has(data.id)) {
+                        const connected = v2EdgesByMarker[data.id] || [];
+                        const activeMarkers = new Set([data.id]);
+                        connected.forEach(e => { activeMarkers.add(e.fromId); activeMarkers.add(e.toId); });
+                        applyHoverFocus(activeMarkers, new Set(connected));
+                    }
+                });
+                labelEl.addEventListener('mouseleave', () => {
+                    if (ITINERARIES[plannerMode] && v2HighlightedIds.has(data.id)) {
+                        clearHoverFocus();
                     }
                 });
 
@@ -552,7 +866,7 @@
                     map.panTo([data.lat, data.lng], { animate: true, duration: 0.4 });
                     marker.openPopup();
 
-                    if (isPlanning) {
+                    if (isPlanning && plannerMode === 'manual') {
                         const stopIndex = tripStops.findIndex(stop => stop.id === data.id);
                         if (stopIndex > -1) {
                             tripStops.splice(stopIndex, 1);
@@ -700,41 +1014,510 @@
 
             drawerBackdrop.addEventListener('click', collapseDrawer);
 
+            // Planner Mode Selector
+            const plannerModeSelect = document.getElementById('planner-mode-select');
+            plannerModeSelect.addEventListener('change', () => {
+                plannerMode = plannerModeSelect.value;
+                if (isPlanning) {
+                    enterPlanningMode();
+                }
+            });
+
+            function enterPlanningMode() {
+                planBtnText.textContent = 'Exit Planning';
+                planBtn.classList.replace('bg-brand-600', 'bg-slate-700');
+                planBtn.classList.replace('hover:bg-brand-700', 'hover:bg-slate-800');
+                tripSection.classList.remove('hidden');
+                tripSection.classList.add('flex');
+
+                if (ITINERARIES[plannerMode]) {
+                    document.getElementById('sidebar-title').textContent = ITINERARIES[plannerMode].label;
+                    document.getElementById('map').style.cursor = '';
+                    clearManualRoute();
+                    renderItinerary(plannerMode);
+                    drawItineraryRoute(plannerMode);
+                } else {
+                    document.getElementById('sidebar-title').textContent = 'Trip Planner';
+                    document.getElementById('map').style.cursor = 'crosshair';
+                    clearItineraryRoute();
+                    updateTripUI();
+                }
+
+                if (isMobile()) {
+                    expandDrawer();
+                }
+            }
+
+            function exitPlanningMode() {
+                planBtnText.textContent = 'Trip Planner';
+                planBtn.classList.replace('bg-slate-700', 'bg-brand-600');
+                planBtn.classList.replace('hover:bg-slate-800', 'hover:bg-brand-700');
+                tripSection.classList.add('hidden');
+                tripSection.classList.remove('flex');
+                document.getElementById('sidebar-title').textContent = 'Categories & Info';
+                document.getElementById('map').style.cursor = '';
+                clearItineraryRoute();
+                clearManualRoute();
+            }
+
             // Toggle Planner Mode
             planBtn.addEventListener('click', () => {
                 isPlanning = !isPlanning;
                 if (isPlanning) {
-                    planBtnText.textContent = 'Exit Planning';
-                    planBtn.classList.replace('bg-brand-600', 'bg-slate-700');
-                    planBtn.classList.replace('hover:bg-brand-700', 'hover:bg-slate-800');
-                    tripSection.classList.remove('hidden');
-                    tripSection.classList.add('flex');
-                    document.getElementById('sidebar-title').textContent = 'Trip Planner';
-                    document.getElementById('map').style.cursor = 'crosshair';
-                    
-                    if (isMobile()) {
-                        expandDrawer();
-                    }
+                    enterPlanningMode();
                 } else {
-                    planBtnText.textContent = 'Trip Planner';
-                    planBtn.classList.replace('bg-slate-700', 'bg-brand-600');
-                    planBtn.classList.replace('hover:bg-slate-800', 'hover:bg-brand-700');
-                    tripSection.classList.add('hidden');
-                    tripSection.classList.remove('flex');
-                    document.getElementById('sidebar-title').textContent = 'Categories & Info';
-                    document.getElementById('map').style.cursor = '';
+                    exitPlanningMode();
                 }
             });
 
-            // Copy Trip for WhatsApp
-            copyBtn.addEventListener('click', async () => {
-                if (tripStops.length === 0) return;
+            function clearManualRoute() {
+                if (polylineLayer) {
+                    map.removeLayer(polylineLayer);
+                    polylineLayer = null;
+                }
+                Object.values(mapMarkers).forEach(m => resetMarkerStyle(m));
+            }
 
-                const message = [
+            function resetMarkerStyle(m) {
+                if (m.setStyle) {
+                    m.setStyle({ color: '#ffffff', weight: 3, fillOpacity: 0.95 });
+                } else if (m.getElement) {
+                    const iconEl = m.getElement()?.querySelector('.airport-marker-container');
+                    if (iconEl) {
+                        iconEl.style.transform = '';
+                        iconEl.style.boxShadow = '';
+                    }
+                }
+            }
+
+            function highlightMarker(m) {
+                if (m.setStyle) {
+                    m.setStyle({ color: '#1e293b', weight: 4, fillOpacity: 1 });
+                } else if (m.getElement) {
+                    const iconEl = m.getElement()?.querySelector('.airport-marker-container');
+                    if (iconEl) {
+                        iconEl.style.transform = 'scale(1.25)';
+                        iconEl.style.boxShadow = '0 0 0 3px #1e293b, 0 4px 12px rgba(99, 102, 241, 0.7)';
+                    }
+                }
+            }
+
+            function dimMarker(id) {
+                const m = mapMarkers[id];
+                if (m.setStyle) {
+                    m.setStyle({ opacity: 0.3, fillOpacity: 0.3 });
+                } else if (m.getElement) {
+                    m.getElement().style.opacity = '0.3';
+                }
+                const label = persistentLabels.find(l => l.id === id);
+                if (label) label.element.style.opacity = '0.3';
+            }
+
+            function undimMarker(id) {
+                const m = mapMarkers[id];
+                if (m.setStyle) {
+                    m.setStyle({ opacity: 1, fillOpacity: 0.95 });
+                } else if (m.getElement) {
+                    m.getElement().style.opacity = '';
+                }
+                const label = persistentLabels.find(l => l.id === id);
+                if (label) label.element.style.opacity = '';
+            }
+
+            // Flatten an itinerary (array of day objects) into a single ordered stop list for rendering & routing
+            function flattenItinerary(itin) {
+                const flat = [];
+                itin.forEach(day => {
+                    day.stops.forEach(stop => {
+                        flat.push({ ...stop, day: day.day, date: day.date, accommodation: day.accommodation });
+                    });
+                });
+                return flat;
+            }
+
+            function renderItinerary(mode) {
+                const itin = ITINERARIES[mode].data;
+                const list = document.getElementById('trip-list');
+                const count = document.getElementById('trip-count');
+                const flat = flattenItinerary(itin);
+                const visitCount = flat.filter(s => s.type === 'visit').length;
+
+                count.textContent = `${visitCount} stops · ${itin.length} days`;
+                mobileTripBadge.textContent = `${visitCount} stops`;
+                mobileTripBadge.classList.remove('hidden');
+
+                const legendHtml = `
+                    <div class="flex flex-wrap gap-2.5 text-[10px] text-gray-500 mb-2.5 px-0.5">
+                        <span class="flex items-center gap-1"><span class="inline-block w-4 h-0.5 rounded-full" style="background:#0284c7"></span>Car / day trip</span>
+                        <span class="flex items-center gap-1"><span class="inline-block w-4 h-0.5 rounded-full" style="background:#16a34a"></span>HSR</span>
+                        <span class="flex items-center gap-1"><span class="inline-block w-4 h-0.5" style="background: repeating-linear-gradient(90deg, #6366f1 0 3px, transparent 3px 7px)"></span>Flight</span>
+                    </div>
+                `;
+
+                let seq = 0;
+                list.innerHTML = legendHtml + itin.map(day => `
+                    <div class="mb-1">
+                        <div class="flex items-baseline justify-between px-0.5 mb-1.5 mt-2 first:mt-0">
+                            <span class="text-xs font-bold text-brand-800">${day.day} &middot; ${day.date}</span>
+                            <span class="text-[10px] text-gray-400">🛏 ${day.accommodation}</span>
+                        </div>
+                        ${day.stops.map(stop => {
+                            if (stop.type === 'flight' || stop.type === 'transport') {
+                                const edgeRef = stop.edge ? stop.edge.edgeRef : null;
+                                const fromCo = stop.fromId !== undefined ? companies[stop.fromId] : (stop.edge ? companies[stop.edge.fromId] : null);
+                                const toCo = stop.toId !== undefined ? companies[stop.toId] : (stop.edge ? companies[stop.edge.toId] : null);
+                                const travelData = edgeRef ? edgeRef.travelData : getRouteTravelData(fromCo, toCo);
+
+                                const hoverAttrs = edgeRef !== null && edgeRef !== undefined
+                                    ? `onmouseenter="hoverItineraryRoute(${edgeRef.index})" onmouseleave="leaveItineraryRoute(${edgeRef.index})"` 
+                                    : '';
+
+                                const transportBadges = travelData ? `
+                                    <div class="mt-2 pt-1.5 border-t border-gray-200/60 grid grid-cols-3 gap-1 text-[10px] text-center">
+                                        <div class="p-1 rounded ${travelData.flight.available ? 'bg-indigo-50 text-indigo-800 border border-indigo-100 font-medium' : 'bg-gray-100/60 text-gray-400'}">
+                                            <span class="font-bold block">✈️ Flight</span>
+                                            <span>${travelData.flight.available ? travelData.flight.time : 'N/A'}</span>
+                                        </div>
+                                        <div class="p-1 rounded ${travelData.hsr.available ? 'bg-emerald-50 text-emerald-800 border border-emerald-100 font-medium' : 'bg-gray-100/60 text-gray-400'}">
+                                            <span class="font-bold block">🚄 HSR</span>
+                                            <span>${travelData.hsr.available ? travelData.hsr.time : 'N/A'}</span>
+                                        </div>
+                                        <div class="p-1 rounded ${travelData.car.available ? 'bg-sky-50 text-sky-800 border border-sky-100 font-medium' : 'bg-gray-100/60 text-gray-400'}">
+                                            <span class="font-bold block">🚗 Car</span>
+                                            <span>${travelData.car.available ? travelData.car.time : 'N/A'}</span>
+                                        </div>
+                                    </div>
+                                ` : '';
+
+                                return `
+                                    <div class="pl-2.5 pr-3 py-2 mb-1.5 border-l-2 border-dashed border-brand-400 text-[11px] text-gray-700 bg-gray-50/80 rounded-r-md hover:bg-brand-50/60 hover:border-brand-600 transition-all cursor-pointer shadow-2xs group" ${hoverAttrs}>
+                                        <div class="flex items-center justify-between">
+                                            <span class="font-bold text-brand-900">${stop.ampm}</span>
+                                            <span class="text-[10px] font-semibold px-1.5 py-0.5 bg-brand-100/80 text-brand-800 rounded truncate">${stop.flightNo || (stop.type === 'flight' ? 'Flight' : 'Transit')}</span>
+                                        </div>
+                                        <div class="font-bold text-gray-900 text-xs mt-0.5">${stop.title || ''}</div>
+                                        ${stop.details ? `<div class="text-gray-500 text-[10px] mt-0.5">${stop.details}</div>` : ''}
+                                        ${transportBadges}
+                                    </div>
+                                `;
+                            }
+                            const co = companies[stop.id];
+                            seq += 1;
+                            const color = topicColors[co.topic] || '#000000';
+                            return `
+                                <div class="p-3 bg-white rounded-lg border border-gray-200 text-xs sm:text-sm flex items-start shadow-2xs mb-1.5 cursor-pointer hover:border-brand-300" onclick="focusItineraryStop(${stop.id})">
+                                    <span class="w-6 h-6 rounded-full bg-brand-600 text-white text-xs font-bold flex items-center justify-center mr-2.5 shrink-0 mt-0.5">${seq}</span>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-1.5 mb-0.5">
+                                            <span class="text-[10px] font-bold uppercase" style="color: ${color}">${stop.ampm}</span>
+                                            <span class="text-[10px] text-gray-400">&middot; ${co.topic}</span>
+                                        </div>
+                                        <div class="font-semibold text-gray-800 leading-tight truncate">${stop.nameOverride || co.company}</div>
+                                        <div class="text-[11px] text-gray-500 mt-0.5 truncate">${co.city} &middot; ${stop.poc}</div>
+                                        ${stop.note ? `<div class="text-[11px] text-gray-500 mt-1 italic">${stop.note}</div>` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `).join('');
+
+                copyBtn.classList.remove('hidden');
+                copyBtn.innerHTML = `
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                    Copy Itinerary
+                `;
+                clearBtn.classList.add('hidden'); // read-only preset: nothing to clear
+            }
+
+            window.focusItineraryStop = function(id) {
+                const co = companies[id];
+                const m = mapMarkers[id];
+                map.panTo([co.lat, co.lng], { animate: true, duration: 0.4 });
+                if (m) m.openPopup();
+            };
+
+            window.hoverItineraryRoute = function(index) {
+                const edge = v2RouteLines[index];
+                if (!edge) return;
+                applyHoverFocus(new Set([edge.fromId, edge.toId]), new Set([edge]));
+                const midIdx = Math.floor(edge.latlngs.length / 2);
+                const midLatLng = L.latLng(edge.latlngs[midIdx][0], edge.latlngs[midIdx][1]);
+                edge.hitLine.openTooltip(midLatLng);
+            };
+
+            window.leaveItineraryRoute = function(index) {
+                const edge = v2RouteLines[index];
+                if (edge) edge.hitLine.closeTooltip();
+                clearHoverFocus();
+            };
+
+            const ROUTE_STYLES = {
+                day:    { color: '#0284c7', weight: 3, opacity: 0.85, dashArray: null },   // solid blue — local car/day trip
+                hsr:    { color: '#16a34a', weight: 3, opacity: 0.9,  dashArray: null },    // solid green — HSR/train
+                flight: { color: '#6366f1', weight: 2.5, opacity: 0.9, dashArray: '2, 8' }  // dashed indigo arc — flight
+            };
+
+            // Quadratic-bezier arc between two points, for visually distinguishing flight legs from ground legs
+            function arcLatLngs(a, b, curvature = 0.15, segments = 40) {
+                const [lat1, lng1] = a, [lat2, lng2] = b;
+                const midLat = (lat1 + lat2) / 2, midLng = (lng1 + lng2) / 2;
+                const dLat = lat2 - lat1, dLng = lng2 - lng1;
+                const ctrlLat = midLat - dLng * curvature;
+                const ctrlLng = midLng + dLat * curvature;
+                const pts = [];
+                for (let i = 0; i <= segments; i++) {
+                    const t = i / segments;
+                    const lat = (1 - t) * (1 - t) * lat1 + 2 * (1 - t) * t * ctrlLat + t * t * lat2;
+                    const lng = (1 - t) * (1 - t) * lng1 + 2 * (1 - t) * t * ctrlLng + t * t * lng2;
+                    pts.push([lat, lng]);
+                }
+                return pts;
+            }
+
+            // Build ordered (fromId, toId, edgeType) hops from the flattened itinerary.
+            // 'transport' stops carry no coordinate themselves — they set the type of the
+            // NEXT coordinate-bearing hop (HSR train no. => 'hsr', otherwise local car => 'day').
+            function buildItineraryEdges(itin) {
+                const flat = flattenItinerary(itin);
+                const edges = [];
+                let prevId = null;
+                let pendingType = 'day';
+                let pendingStop = null;
+
+                flat.forEach(stop => {
+                    delete stop.edge;
+                    if (stop.type === 'transport') {
+                        pendingType = /HSR/i.test(stop.title || '') ? 'hsr' : 'day';
+                        pendingStop = stop;
+                        return;
+                    }
+                    if (stop.type === 'flight') {
+                        if (prevId !== null && prevId !== stop.fromId) {
+                            const e = { fromId: prevId, toId: stop.fromId, type: pendingType, stop: pendingStop };
+                            edges.push(e);
+                            if (pendingStop) pendingStop.edge = e;
+                            pendingStop = null;
+                        }
+                        const flightEdge = { fromId: stop.fromId, toId: stop.toId, type: 'flight', stop: stop };
+                        edges.push(flightEdge);
+                        stop.edge = flightEdge;
+                        prevId = stop.toId;
+                        pendingType = 'day';
+                        return;
+                    }
+                    // visit
+                    if (prevId !== null && prevId !== stop.id) {
+                        const e = { fromId: prevId, toId: stop.id, type: pendingType, stop: pendingStop };
+                        edges.push(e);
+                        if (pendingStop) pendingStop.edge = e;
+                        pendingStop = null;
+                    }
+                    prevId = stop.id;
+                    pendingType = 'day';
+                });
+
+                return edges;
+            }
+
+            function emphasizeEdge(edge) {
+                const style = ROUTE_STYLES[edge.type];
+                edge.line.setStyle({ weight: style.weight + 3, opacity: 1 });
+                edge.line.bringToFront();
+            }
+
+            function unemphasizeEdge(edge) {
+                const style = ROUTE_STYLES[edge.type];
+                edge.line.setStyle({ weight: style.weight, opacity: style.opacity });
+            }
+
+            function dimEdge(edge) {
+                edge.line.setStyle({ opacity: 0.3 });
+            }
+
+            function emphasizeMarker(id) {
+                const m = mapMarkers[id];
+                if (!m) return;
+                if (m.setStyle) {
+                    m.setStyle({ color: '#f97316', weight: 5, fillOpacity: 1, opacity: 1 });
+                    if (m.setRadius) m.setRadius((isMobile() ? 14 : 11) + 4);
+                } else if (m.getElement) {
+                    m.getElement().style.opacity = '1';
+                    const iconEl = m.getElement()?.querySelector('.airport-marker-container');
+                    if (iconEl) {
+                        iconEl.style.transform = 'scale(1.5)';
+                        iconEl.style.boxShadow = '0 0 0 4px #f97316, 0 4px 14px rgba(99, 102, 241, 0.8)';
+                    }
+                }
+                const label = persistentLabels.find(l => l.id === id);
+                if (label) label.element.style.opacity = '1';
+            }
+
+            function unemphasizeMarker(id) {
+                const m = mapMarkers[id];
+                if (!m) return;
+                if (v2HighlightedIds.has(id)) {
+                    highlightMarker(m);
+                    if (m.setRadius) m.setRadius(isMobile() ? 14 : 11);
+                } else {
+                    dimMarker(id);
+                }
+            }
+
+            // Hover focus: emphasize the active marker(s)/edge(s), fade everything else in
+            // the itinerary scene to 30% opacity, restore all on mouseout.
+            function applyHoverFocus(activeMarkerIds, activeEdges) {
+                companies.forEach((c, id) => {
+                    if (activeMarkerIds.has(id)) {
+                        emphasizeMarker(id);
+                    } else {
+                        dimMarker(id);
+                    }
+                });
+                v2RouteLines.forEach(edge => {
+                    if (activeEdges.has(edge)) {
+                        emphasizeEdge(edge);
+                    } else {
+                        dimEdge(edge);
+                    }
+                });
+            }
+
+            function clearHoverFocus() {
+                companies.forEach((c, id) => unemphasizeMarker(id));
+                v2RouteLines.forEach(edge => unemphasizeEdge(edge));
+            }
+
+            function drawItineraryRoute(mode) {
+                const itin = ITINERARIES[mode].data;
+                clearItineraryRoute();
+                const edges = buildItineraryEdges(itin);
+
+                edges.forEach((edge, index) => {
+                    const a = [companies[edge.fromId].lat, companies[edge.fromId].lng];
+                    const b = [companies[edge.toId].lat, companies[edge.toId].lng];
+                    const style = ROUTE_STYLES[edge.type];
+                    const latlngs = edge.type === 'flight' ? arcLatLngs(a, b) : [a, b];
+
+                    const line = L.polyline(latlngs, {
+                        color: style.color,
+                        weight: style.weight,
+                        opacity: style.opacity,
+                        dashArray: style.dashArray,
+                        lineJoin: 'round'
+                    }).addTo(map);
+
+                    // Wide invisible line layered under the visible one — much easier to hover than a 2-3px stroke
+                    const hitLine = L.polyline(latlngs, {
+                        color: '#000000',
+                        weight: 22,
+                        opacity: 0
+                    }).addTo(map);
+
+                    const fromCo = companies[edge.fromId];
+                    const toCo = companies[edge.toId];
+                    const travelData = getRouteTravelData(fromCo, toCo);
+
+                    const edgeRef = { index, line, hitLine, fromId: edge.fromId, toId: edge.toId, type: edge.type, travelData, latlngs };
+                    edge.edgeRef = edgeRef;
+                    v2RouteLines.push(edgeRef);
+                    (v2EdgesByMarker[edge.fromId] ||= []).push(edgeRef);
+                    (v2EdgesByMarker[edge.toId] ||= []).push(edgeRef);
+
+                    const tooltipContent = createRouteTooltipHtml(travelData, edge.type);
+
+                    hitLine.bindTooltip(tooltipContent, {
+                        sticky: true,
+                        direction: 'top',
+                        className: 'custom-route-tooltip',
+                        offset: [0, -12]
+                    });
+
+                    hitLine.on('mouseover', () => {
+                        applyHoverFocus(new Set([edgeRef.fromId, edgeRef.toId]), new Set([edgeRef]));
+                        hitLine.openTooltip();
+                    });
+                    hitLine.on('mouseout', () => {
+                        clearHoverFocus();
+                        hitLine.closeTooltip();
+                    });
+
+                    [edge.fromId, edge.toId].forEach(id => {
+                        if (!v2HighlightedIds.has(id)) {
+                            v2HighlightedIds.add(id);
+                            highlightMarker(mapMarkers[id]);
+                        }
+                    });
+                });
+
+                companies.forEach((c, id) => {
+                    if (!v2HighlightedIds.has(id)) dimMarker(id);
+                });
+
+                let seq = 0;
+                flattenItinerary(itin).filter(s => s.type === 'visit').forEach(stop => {
+                    seq += 1;
+                    const co = companies[stop.id];
+                    const badge = L.divIcon({
+                        className: '',
+                        html: `<div class="flex items-center justify-center w-5 h-5 rounded-full bg-slate-800 text-white text-[10px] font-bold border-2 border-white shadow" style="transform: translate(10px, -10px);">${seq}</div>`,
+                        iconSize: [0, 0]
+                    });
+                    v2RouteMarkers.push(L.marker([co.lat, co.lng], { icon: badge, interactive: false }).addTo(map));
+                });
+            }
+
+            function clearItineraryRoute() {
+                v2RouteLines.forEach(e => { map.removeLayer(e.line); map.removeLayer(e.hitLine); });
+                v2RouteLines = [];
+                v2EdgesByMarker = {};
+                v2RouteMarkers.forEach(m => map.removeLayer(m));
+                v2RouteMarkers = [];
+                v2HighlightedIds.forEach(id => resetMarkerStyle(mapMarkers[id]));
+                v2HighlightedIds.clear();
+                companies.forEach((c, id) => undimMarker(id));
+            }
+
+            function copyBtnIconHtml(label) {
+                return `
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                    ${label}
+                `;
+            }
+
+            function buildManualMessage() {
+                return [
                     '*China Innovation Trip*',
                     '',
                     ...tripStops.map((stop, i) => `${i + 1}. ${stop.company}\n   ${stop.city} · ${stop.topic}`)
                 ].join('\n\n');
+            }
+
+            function buildItineraryMessage(mode) {
+                const itin = ITINERARIES[mode].data;
+                const lines = [`*China Innovation Trip — ${ITINERARIES[mode].label}*`, ''];
+                itin.forEach(day => {
+                    lines.push(`*${day.day} · ${day.date}* (🛏 ${day.accommodation})`);
+                    day.stops.forEach(stop => {
+                        if (stop.type === 'flight' || stop.type === 'transport') {
+                            lines.push(`   ${stop.ampm}: ${stop.title || ''}${stop.flightNo ? ` (${stop.flightNo})` : ''}${stop.details ? ` — ${stop.details}` : ''}`);
+                        } else {
+                            const co = companies[stop.id];
+                            lines.push(`   ${stop.ampm}: ${stop.nameOverride || co.company} — ${co.city} · ${stop.poc}`);
+                        }
+                    });
+                    lines.push('');
+                });
+                return lines.join('\n');
+            }
+
+            // Copy Trip for WhatsApp
+            copyBtn.addEventListener('click', async () => {
+                const isPreset = !!ITINERARIES[plannerMode];
+                if (!isPreset && tripStops.length === 0) return;
+
+                const message = isPreset ? buildItineraryMessage(plannerMode) : buildManualMessage();
+                const defaultLabel = isPreset ? 'Copy Itinerary' : 'Copy for WhatsApp';
 
                 try {
                     if (!navigator.clipboard || !navigator.clipboard.writeText) {
@@ -742,11 +1525,8 @@
                     }
                     await navigator.clipboard.writeText(message);
                     copyBtn.textContent = 'Copied to Clipboard!';
-                    setTimeout(() => { 
-                        copyBtn.innerHTML = `
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
-                            Copy for WhatsApp
-                        `;
+                    setTimeout(() => {
+                        copyBtn.innerHTML = copyBtnIconHtml(defaultLabel);
                     }, 1800);
                 } catch (error) {
                     const fallback = document.createElement('textarea');
@@ -766,10 +1546,7 @@
                     copyBtn.textContent = 'Text selected — press ⌘C / Ctrl+C';
                     setTimeout(() => {
                         fallback.remove();
-                        copyBtn.innerHTML = `
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
-                            Copy for WhatsApp
-                        `;
+                        copyBtn.innerHTML = copyBtnIconHtml(defaultLabel);
                     }, 6000);
                 }
             });
@@ -829,9 +1606,10 @@
                         </div>
                     `).join('');
                     copyBtn.classList.remove('hidden');
+                    copyBtn.innerHTML = copyBtnIconHtml('Copy for WhatsApp');
                     clearBtn.classList.remove('hidden');
                 }
-                
+
                 // Update marker highlights
                 Object.values(mapMarkers).forEach(m => {
                     const stopIndex = tripStops.findIndex(s => s.id === m.companyData.id);
