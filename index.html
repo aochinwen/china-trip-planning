@@ -143,6 +143,34 @@
             box-shadow: 0 4px 12px rgba(217, 70, 239, 0.65);
         }
 
+        /* Train Station Marker Styling (diamond badge, distinct from hotel/POI/airport markers) */
+        .train-marker-wrapper {
+            background: transparent;
+            border: none;
+        }
+        .train-marker-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            background-color: #f59e0b;
+            color: white;
+            border-radius: 6px;
+            border: 2px solid white;
+            box-shadow: 0 3px 8px rgba(245, 158, 11, 0.45);
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            transform: rotate(45deg);
+        }
+        .train-marker-container svg {
+            transform: rotate(-45deg);
+        }
+        .train-marker-container:hover {
+            transform: rotate(45deg) scale(1.18);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.65);
+        }
+
         /* Custom Route Hover Tooltip Styling */
         .leaflet-tooltip.custom-route-tooltip {
             background: transparent;
@@ -210,6 +238,11 @@
                 <button id="toggle-hotels-btn" class="px-3 sm:px-4 py-2 bg-white border border-fuchsia-300 text-fuchsia-700 rounded-lg shadow-sm hover:bg-fuchsia-50 active:bg-fuchsia-100 font-medium text-xs sm:text-sm transition-all duration-150 whitespace-nowrap flex items-center min-h-[38px]">
                     <svg class="w-4 h-4 mr-1.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v11m0-11a2 2 0 012-2h2a2 2 0 012 2m-6 0h18M3 18h18M21 7v11M9 7v4m6-4v4m-9 4h.01M9 18v-3a2 2 0 012-2h2a2 2 0 012 2v3"></path></svg>
                     <span id="toggle-hotels-btn-text">Show Hotels</span>
+                </button>
+                <!-- Train Station Layer Toggle Button -->
+                <button id="toggle-trains-btn" class="px-3 sm:px-4 py-2 bg-white border border-amber-300 text-amber-700 rounded-lg shadow-sm hover:bg-amber-50 active:bg-amber-100 font-medium text-xs sm:text-sm transition-all duration-150 whitespace-nowrap flex items-center min-h-[38px]">
+                    <svg class="w-4 h-4 mr-1.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3c-4 0-7 1-7 4v9a3 3 0 003 3l-1.5 1.5v.5h11v-.5L16 19a3 3 0 003-3V7c0-3-3-4-7-4zm-5 4h10M9 16.5h.01M15 16.5h.01"></path></svg>
+                    <span id="toggle-trains-btn-text">Show HSR Stations</span>
                 </button>
                 <!-- Trip Planning Toggle Button -->
                 <button id="plan-trip-btn" class="px-3 sm:px-4 py-2 bg-brand-600 text-white rounded-lg shadow-sm hover:bg-brand-700 active:bg-brand-800 font-medium text-xs sm:text-sm transition-all duration-150 whitespace-nowrap flex items-center min-h-[38px]">
@@ -742,7 +775,33 @@
             { name: "Atour Hotel Suzhou SIP Jinji Lake Expo Center", nameCn: "苏州工业园区金鸡湖博览中心亚朵酒店", city: "Suzhou", address: "No. 158 Wangdun Road, Suzhou Industrial Park, Suzhou, Jiangsu (江苏省苏州市工业园区旺墩路158号)", lat: 31.3182, lng: 120.7015, tier: "4 Stars", brand: "Atour" },
             { name: "Mercure Shanghai Hongqiao Railway Station", nameCn: "上海虹桥站美居酒店", city: "Shanghai", address: "Building 5, Xiexin Center, Lane 683 Shenhong Road, Minhang District, Shanghai (上海市闵行区申虹路683弄协信中心5号楼)", lat: 31.1965, lng: 121.3158, tier: "4 Stars", brand: "Mercure" },
             { name: "Courtyard by Marriott Shanghai Central", nameCn: "上海静安万怡酒店", city: "Shanghai", address: "No. 338 Hengfeng Road, Jing'an District, Shanghai (上海市静安区恒丰路338号)", lat: 31.2468, lng: 121.4552, tier: "4 Stars", brand: "Courtyard by Marriott" },
-            { name: "Atour Hotel Shanghai People's Square", nameCn: "上海人民广场亚朵酒店", city: "Shanghai", address: "No. 120 Jiujiang Road, Huangpu District, Shanghai (上海市黄浦区九江路120号)", lat: 31.2381, lng: 121.4825, tier: "4 Stars", brand: "Atour" }
+            { name: "Atour Hotel Shanghai People's Square", nameCn: "上海人民广场亚朵酒店", city: "Shanghai", address: "No. 120 Jiujiang Road, Huangpu District, Shanghai (上海市黄浦区九江路120号)", lat: 31.2381, lng: 121.4825, tier: "4 Stars", brand: "Atour" },
+            { name: "Hangzhou Yuhang Ramada", city: "Hangzhou", address: "Building 1, No. 2699 Yuhangtang Road, Yuhang District, Hangzhou", lat: 30.2798, lng: 120.0225, tier: "4 Stars", price: "from 80 SGD", brand: "Ramada — newly opened, strong business-hotel setup (restaurant, gym, lobby bar, coworking spaces, conference room). ~2 km from Future Sci-Tech City. Best for a more comfortable business stay while still convenient for the tech parks and West Station." },
+            { name: "Hangzhou YuHang WanHan Hotel", city: "Hangzhou", address: "Building 1, 2699 Yuhangtang Road, Yuhang District, Hangzhou", lat: 30.2812, lng: 120.0198, tier: "4 Stars", price: "from 76 SGD", brand: "~260 m from Chuangjing Road Metro Station, ~7 min by car to Hangzhou West Railway Station. Restaurant, gym, laundry room, coworking spaces. Best price-to-comfort balance with metro access." },
+            { name: "Wyndham Garden Hotel Hangzhou Yuhang", city: "Hangzhou", address: "No. 2699 Yuhangtang Road, Yuhang District, Hangzhou", lat: 30.2785, lng: 120.0242, tier: "4 Stars", price: "from 124 SGD", brand: "Wyndham Garden — proximity to Future Sci-Tech City CBD, nearby metro access, convenient to Hangzhou West Railway Station. Bar, restaurant, gym, business center, meeting spaces. Best for a polished full-service business stay." },
+            { name: "Jianguo Hotel Shanghai", city: "Shanghai", address: "No. 439 Caoxi North Road, Xuhui District, Shanghai, 200030, China", lat: 31.1927, lng: 121.4348, tier: "4 Stars", price: "from 76 SGD", brand: "Xujiahui commercial district — very central Xuhui base near shopping, dining, metro lines. Good for first-time visitors, business travelers, and anyone wanting to stay in the heart of Xujiahui." },
+            { name: "Courtyard by Marriott Shanghai Xujiahui", city: "Shanghai", address: "No. 100 Hongqiao Road, Xuhui District, Shanghai, 200030, China", lat: 31.1972, lng: 121.4308, tier: "4 Stars", price: "from 136 SGD", brand: "Xujiahui — dependable international-brand option close to shopping malls, easy access to Metro Lines 1, 9, and 11." },
+            { name: "Atour Hotel (Wending Road), Xujiahui Center, Shanghai", city: "Shanghai", address: "No. 199 Wending Road, Xuhui District, Shanghai, China", lat: 31.1845, lng: 121.4395, tier: "4 Stars", price: "from 114 SGD", brand: "Xujiahui — modern stay near the stadium area with convenient transport, easy access to shopping and city sightseeing." },
+            { name: "Jinglai Hotel·Selection (Shanghai Xujiahui Jiaotong University)", city: "Shanghai", address: "No. 169 Nandan Road, Xuhui District, Shanghai, China", lat: 31.1885, lng: 121.4325, tier: "4 Stars", price: "from 82 SGD", brand: "Xujiahui / near Jiaotong University — good-value 4-star option with convenient access to metro, business areas, and nearby attractions." },
+            { name: "PuJing Waiting Hotel (Shanghai Stadium Xujiahui Metro Station Branch)", city: "Shanghai", address: "No. 238-101, Nandan East Road, Xuhui District, Shanghai, China", lat: 31.1878, lng: 121.4405, tier: "4 Stars", price: "from 131 SGD", brand: "Xujiahui / Shanghai Stadium — newer 4-star option very close to Xujiahui Metro Station, quick metro access, lively but convenient neighborhood." },
+            { name: "Hefei Nan Station Maison New Century Hotel", city: "Hefei", address: "No. 1398 Huizhou Avenue, Baohe District, Hefei, Anhui, China", lat: 31.7398, lng: 117.2865, tier: "4 Stars", price: "from 58 SGD", brand: "Lei Street / Hefei South Railway Station — newer hotel opened 2024, convenient metro access, strong business-travel profile. Practical choice for a modern stay in southern Hefei." },
+            { name: "Home2 Suites by Hilton Hefei South Railway Station", city: "Hefei", address: "1st Floor, Shop, Building 2, Plot S1-18, Tianyu Plaza Project, Intersection of Susong Road and Guangfu Road, Baohe District, Hefei, Anhui, China", lat: 31.7422, lng: 117.2918, tier: "4 Stars", price: "from 61 SGD", brand: "Lei Street / Hefei South Railway Station — dependable international-brand stay opened 2023, suitable for business trips and longer stays. Breakfast included, pet-friendly." },
+            { name: "Platinum Hanjue Hotel", city: "Hefei", address: "No. 5111 Huizhou Avenue, Baohe District, Hefei, Anhui, 230001, China", lat: 31.7355, lng: 117.2842, tier: "4 Stars", price: "from 43 SGD", brand: "Luogang Park / ZWECC — one of the better value 4-star options in southern Hefei. Especially suitable if you prefer a larger full-service hotel for business travel." },
+            { name: "NATO ·QiXin Begonia Hotel (Hefei South Railway Station Store)", city: "Hefei", address: "Room 101, Building A, Nantingfang Neighborhood Center, Intersection of Qimen Road and Tongcheng South Road, Baohe District, Hefei, Anhui, China", lat: 31.7378, lng: 117.2905, tier: "4 Stars", price: "from 36 SGD", brand: "Lei Street / Hefei South Railway Station — newer 4-star designer-style option with smart-room features, convenient location for business travelers." },
+            { name: "NATO.Walking in the Clouds Hotel", city: "Hefei", address: "1st Floor, Phoenix Cultural Plaza Office Building, No. 1398 Huizhou Avenue, Baohe District, Hefei, Anhui, China", lat: 31.7405, lng: 117.2848, tier: "4 Stars", price: "from 41 SGD", brand: "Lei Street / Hefei South Railway Station — opened 2024, modern 4-star choice in southern Hefei with breakfast included and good metro accessibility." },
+            { name: "Hampton by Hilton Suzhou Wuzhong", city: "Suzhou", address: "No. 38 Yingchun Road, Wuzhong District, Suzhou, Jiangsu, China", lat: 31.2645, lng: 120.6398, tier: "4 Stars", price: "from 68 SGD", brand: "Wuzhong District — strong match if your work location is closer to southern Suzhou or the Wuzhong / Guoxiang side (some Huawei-related office areas). Right by Yingchunlu Metro Station for commuting." },
+            { name: "Mercure Hotel Suzhou Jinji Lake", city: "Suzhou", address: "Honghai Building, No. 72 Xingdu Street, Suzhou Industrial Park, Suzhou, Jiangsu, China", lat: 31.3175, lng: 120.7035, tier: "4 Stars", price: "from 78 SGD", brand: "Suzhou Industrial Park — best match if the Huawei OpenLab is in SIP. Strong business location, convenient for meetings, relatively close to metro access." },
+            { name: "Holiday Inn Express Suzhou Industrial Park (蘇州工業園區智選假日酒店（蘇州奧林匹克體育中心店）)", city: "Suzhou", address: "Address unverified — confirmed to be in Suzhou Industrial Park near the Olympic Sports Center, but no detailed street address available from official results", lat: 31.3468, lng: 120.7552, tier: "4 Stars", brand: "Suzhou Industrial Park (Olympic Sports Center) — may suit a Huawei OpenLab-related stay in SIP; verify exact address before booking." },
+            { name: "Suzhou City Holiday Hotel (Shiquan Street Wangshi Garden)", city: "Suzhou", address: "No. 77 North Nanyuan Road, Canglang Subdistrict, Gusu District, Suzhou, Jiangsu, China", lat: 31.2972, lng: 120.6298, tier: "4 Stars", price: "from 48 SGD", brand: "Gusu District — not the closest likely business-base option, but a reasonable 4-star fallback for easier access to central Suzhou while keeping the stay affordable." }
+        ];
+
+        // High-Speed Rail station data (separate layer, own symbology, toggled independently of hotels/companies/POIs)
+        const trainStations = [
+            { name: "Hefei Station", district: "Yaohai District", city: "Hefei", lat: 31.8893, lng: 117.3115, dms: "31°53′21″ N, 117°18′41″ E" },
+            { name: "Hefei South Station", district: "Baohe District", city: "Hefei", lat: 31.7989, lng: 117.2903, dms: "31°47′56″ N, 117°17′25″ E" },
+            { name: "Hangzhou East (Dong) Station", district: null, city: "Hangzhou", lat: 30.2935, lng: 120.2084, dms: "30°17′36.6″ N, 120°12′30.1″ E" },
+            { name: "Shanghai Pudong / East Station", district: "Zhuqiao Town", city: "Shanghai", lat: 31.1244, lng: 121.7731, dms: "31°07′28″ N, 121°46′23″ E" },
+            { name: "Shanghai Hongqiao Station", district: null, city: "Shanghai", lat: 31.1963, lng: 121.3161, dms: "31°11′46.7″ N, 121°18′58.1″ E" }
         ];
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -799,6 +858,15 @@
                 <span class="font-medium truncate">Hotel (toggle in header)</span>
             `;
             legendContainer.appendChild(hotelLegendItem);
+
+            // Train station legend entry (separate symbology, own toggle)
+            const trainLegendItem = document.createElement('div');
+            trainLegendItem.className = 'flex items-center space-x-2 text-xs sm:text-sm text-gray-700 bg-gray-50/60 p-1.5 rounded-md border border-gray-100';
+            trainLegendItem.innerHTML = `
+                <span class="w-3 h-3 inline-block shrink-0" style="background-color: #f59e0b; transform: rotate(45deg); box-shadow: 0 0 0 2px white, 0 0 0 3px #f59e0b40;"></span>
+                <span class="font-medium truncate">HSR Station (toggle in header)</span>
+            `;
+            legendContainer.appendChild(trainLegendItem);
 
             // Generate City Filter Jump Tags
             const cityTagsContainer = document.getElementById('city-tags-container');
@@ -1102,6 +1170,7 @@
                         </p>
                         <div class="text-xs text-gray-700 bg-gray-50 p-2.5 rounded-lg border border-gray-100 leading-relaxed space-y-1">
                             ${hotel.rating ? `<div><span class="font-semibold">Rating:</span> ${hotel.rating}</div>` : ''}
+                            ${hotel.price ? `<div><span class="font-semibold">Price:</span> ${hotel.price}</div>` : ''}
                             <div><span class="font-semibold">Brand/Notes:</span> ${hotel.brand}</div>
                         </div>
                     </div>
@@ -1113,6 +1182,7 @@
                         <div class="font-bold text-gray-900 text-sm leading-snug">${hotel.name}${hotel.nameCn ? ` <span class="font-normal text-gray-500">(${hotel.nameCn})</span>` : ''}</div>
                         <div class="text-xs text-gray-500 mt-1">${hotel.city} &middot; ${hotel.address}</div>
                         ${hotel.rating ? `<div class="text-xs text-gray-700 mt-1"><span class="font-semibold">Rating:</span> ${hotel.rating}</div>` : ''}
+                        ${hotel.price ? `<div class="text-xs text-gray-700 mt-0.5"><span class="font-semibold">Price:</span> ${hotel.price}</div>` : ''}
                         <div class="text-xs text-gray-700 mt-0.5"><span class="font-semibold">Brand/Notes:</span> ${hotel.brand}</div>
                     </div>
                 `;
@@ -1150,6 +1220,90 @@
                     toggleHotelsBtnText.textContent = 'Show Hotels';
                     toggleHotelsBtn.classList.remove('bg-fuchsia-600', 'text-white', 'hover:bg-fuchsia-700');
                     toggleHotelsBtn.classList.add('bg-white', 'text-fuchsia-700', 'hover:bg-fuchsia-50');
+                }
+            });
+
+            // Train Station Layer (separate symbology, hidden by default, toggled independently)
+            const trainLayerGroup = L.layerGroup();
+            let trainsVisible = false;
+
+            const trainIcon = L.divIcon({
+                className: 'train-marker-wrapper',
+                html: `
+                    <div class="train-marker-container" title="HSR Station">
+                        <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                            <path d="M12 2c-4 0-7 1-7 4v9a3 3 0 003 3l-1.5 1.5v.5h11v-.5L16 18a3 3 0 003-3V6c0-3-3-4-7-4zm-5 4h10M9 15.5h.01M15 15.5h.01"/>
+                        </svg>
+                    </div>
+                `,
+                iconSize: [26, 26],
+                iconAnchor: [13, 13],
+                popupAnchor: [0, -13]
+            });
+
+            trainStations.forEach((station) => {
+                const marker = L.marker([station.lat, station.lng], { icon: trainIcon });
+
+                const cardContent = `
+                    <div class="p-3.5 bg-white rounded-xl overflow-hidden">
+                        <div class="flex items-center space-x-1.5 mb-1.5">
+                            <span class="w-2.5 h-2.5 shrink-0" style="background-color: #f59e0b; transform: rotate(45deg);"></span>
+                            <span class="text-[10px] font-bold uppercase tracking-wider" style="color: #f59e0b;">HSR Station</span>
+                        </div>
+                        <h3 class="font-bold text-gray-900 text-base leading-snug mb-1">${station.name}</h3>
+                        <p class="text-xs text-gray-500 mb-2 flex items-center">
+                            <svg class="w-3.5 h-3.5 mr-1 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
+                            ${station.city}${station.district ? ` &middot; ${station.district}` : ''}
+                        </p>
+                        <div class="text-xs text-gray-700 bg-gray-50 p-2.5 rounded-lg border border-gray-100 leading-relaxed space-y-1">
+                            <div><span class="font-semibold">Coordinates:</span> ${station.lat.toFixed(4)}° N, ${station.lng.toFixed(4)}° E</div>
+                            <div><span class="font-semibold">DMS:</span> ${station.dms}</div>
+                        </div>
+                    </div>
+                `;
+
+                const tooltipContent = `
+                    <div class="p-2.5 max-w-[240px]">
+                        <div class="text-[10px] font-bold uppercase tracking-wider mb-1" style="color: #f59e0b;">HSR Station</div>
+                        <div class="font-bold text-gray-900 text-sm leading-snug">${station.name}</div>
+                        <div class="text-xs text-gray-500 mt-1">${station.city}${station.district ? ` &middot; ${station.district}` : ''}</div>
+                        <div class="text-xs text-gray-700 mt-1"><span class="font-semibold">Coordinates:</span> ${station.lat.toFixed(4)}° N, ${station.lng.toFixed(4)}° E</div>
+                    </div>
+                `;
+
+                marker.bindPopup(cardContent, {
+                    className: 'custom-tooltip',
+                    offset: [0, -8],
+                    closeButton: false,
+                    autoPan: true
+                });
+
+                marker.bindTooltip(tooltipContent, {
+                    className: 'custom-tooltip',
+                    direction: 'top',
+                    offset: [0, -13],
+                    opacity: 1,
+                    sticky: false
+                });
+
+                marker.addTo(trainLayerGroup);
+            });
+
+            // Train Station Toggle Button
+            const toggleTrainsBtn = document.getElementById('toggle-trains-btn');
+            const toggleTrainsBtnText = document.getElementById('toggle-trains-btn-text');
+            toggleTrainsBtn.addEventListener('click', () => {
+                trainsVisible = !trainsVisible;
+                if (trainsVisible) {
+                    trainLayerGroup.addTo(map);
+                    toggleTrainsBtnText.textContent = 'Hide HSR Stations';
+                    toggleTrainsBtn.classList.remove('bg-white', 'text-amber-700', 'hover:bg-amber-50');
+                    toggleTrainsBtn.classList.add('bg-amber-600', 'text-white', 'hover:bg-amber-700');
+                } else {
+                    map.removeLayer(trainLayerGroup);
+                    toggleTrainsBtnText.textContent = 'Show HSR Stations';
+                    toggleTrainsBtn.classList.remove('bg-amber-600', 'text-white', 'hover:bg-amber-700');
+                    toggleTrainsBtn.classList.add('bg-white', 'text-amber-700', 'hover:bg-amber-50');
                 }
             });
 
