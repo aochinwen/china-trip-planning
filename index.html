@@ -346,6 +346,7 @@
             "RPC": "#eab308",              // Yellow
             "Digi Tunnel": "#64748b",      // Slate
             "Digi Depot": "#ec4899",       // Pink
+            "Logistics/Smart Supply Chain": "#0ea5e9", // Sky blue
             "Airport": "#6366f1",          // Indigo
             "Don't know yet": "#1f2937"    // Gray 800
         };
@@ -363,10 +364,10 @@
 
         // Data from the provided document
         const companies = [
-            { 
-                city: "Shenzhen", company: "BYD Factory", topic: "Lights out depot", 
-                desc: "Manufacturing automation at scale & automated urban-transit systems", 
-                address: "3009 BYD Road, Pingshan District, Shenzhen", lat: 22.6775, lng: 114.3468 
+            {
+                city: "Shenzhen", company: "BYD Factory", topic: "Lights out depot",
+                desc: "Manufacturing automation at scale & automated urban-transit systems",
+                address: "Shenzhen-Shanwei Industrial Transfer Park (Tianxinghu Area), Plot 06-02-67, Meilong Town, Haifeng County, Shanwei, Guangdong", lat: 22.677453694163287, lng: 114.35965152402242
             },
             { 
                 city: "Shenzhen", company: "Shenzhen Metro Smart Depot", topic: "Lights out depot", 
@@ -386,10 +387,10 @@
             { 
                 city: "Hangzhou", company: "Deep Robotics", topic: "Robotics", 
                 desc: "Autonomous inspection robots for depots, tunnels and infrastructure", 
-                address: "Building 3, Zijin Dream Plaza, 36 Xinran Street, Xihu District, Hangzhou", lat: 30.3015, lng: 120.0888 
+                address: "Building 3, Zijin Dream Plaza, 36 Xinran Street, Xihu District, Hangzhou", lat: 30.3015, lng: 120.0888
             },
-            { 
-                city: "Hangzhou", company: "Hikvision", topic: "VA", 
+            {
+                city: "Hangzhou", company: "Hikvision", topic: "VA",
                 desc: "Guanlan large-scale AI models for advanced video analytics, intelligent event recognition, and multimodal semantic search.", 
                 address: "No.555 Qianmo Road, Binjiang District, Hangzhou", lat: 30.1983, lng: 120.2131 
             },
@@ -404,9 +405,9 @@
                 address: "Jinze Town, Qingpu District, Shanghai", lat: 31.0664, lng: 120.9702 
             },
             { 
-                city: "Nanjing", company: "Puzhen", topic: "RPC", 
-                desc: "Digital design and smart manufacturing of rail transit vehicles using advanced PLM, 3D CAD, and process simulation systems.", 
-                address: "No.68, North PuZhu Road, Jiangbei New Area, Nanjing", lat: 32.1382, lng: 118.7302 
+                city: "Nanjing", company: "Puzhen", topic: "RPC",
+                desc: "Digital design and smart manufacturing of rail transit vehicles using advanced PLM, 3D CAD, and process simulation systems.",
+                address: "No.68, Puzhu North Road, Pukou District, Nanjing City, China", lat: 32.1382, lng: 118.7302
             },
             { 
                 city: "Shanghai", company: "STEC", topic: "Digi Tunnel", 
@@ -414,14 +415,19 @@
                 address: "1099 South Wanping Rd., Xuhui District, Shanghai", lat: 31.1824, lng: 121.4552 
             },
             { 
-                city: "Suzhou", company: "Suzhou Chaoyanglu Smart Depot", topic: "Digi Depot", 
-                desc: "automated train inspection & depot VA", 
-                address: "Chaoyang Road Depot, Suzhou Metro, Suzhou", lat: 31.2989, lng: 120.5853 
+                city: "Suzhou", company: "Suzhou Chaoyanglu Smart Depot", topic: "Digi Depot",
+                desc: "automated train inspection & depot VA",
+                address: "No. 1610, Zhenchuan West Road, Kunshan City, Suzhou City, Jiangsu Province, China", lat: 31.292457660436565, lng: 120.74949486522299
             },
             { 
-                city: "Suzhou", company: "Huawei Open Lab", topic: "AI/Cloud", 
-                desc: "Collaborative innovation hub developing cloud, AI, and smart city solutions through open ecosystem partnerships.", 
-                address: "No. 999 Xiandai Avenue, Suzhou Industrial Park, Suzhou", lat: 31.3182, lng: 120.7306 
+                city: "Suzhou", company: "Huawei Open Lab", topic: "AI/Cloud",
+                desc: "Collaborative innovation hub developing cloud, AI, and smart city solutions through open ecosystem partnerships.",
+                address: "No. 9 Jiangyun Road, Suzhou Industrial Park, Suzhou, Jiangsu", lat: 31.3182, lng: 120.7306
+            },
+            {
+                city: "Suzhou", company: "Suzhou Smart Station", topic: "AI/Cloud",
+                desc: "AI smart customer service, AI smart maintenance, AI smart detection, and public complaint handling on Suzhou Metro Line 6 (Hanqing Bridge).",
+                address: "8Q26+R85, Wuzhong District, Suzhou, Jiangsu, China, 215000", lat: 31.302054028948753, lng: 120.76043770072984
             },
             { 
                 city: "Shanghai", company: "Shanghai Urban Operation Group SUOG", topic: "Digi Tunnel", 
@@ -429,9 +435,9 @@
                 address: "No. 600, Dapu Road, Huangpu District, Shanghai, P.R. China", lat: 31.2001, lng: 121.4725 
             },
             { 
-                city: "Hefei", company: "Harmony Intelligent Mobility Alliance", topic: "AI/Cloud", 
-                desc: "Huawei & JAC smart vehicle alliance & automated super factory for intelligent mobility solutions.", 
-                address: "Feixi County, Hefei, Anhui, China, 231200", lat: 31.687100, lng: 117.204586 
+                city: "Hefei", company: "Harmony Intelligent Mobility Alliance", topic: "AI/Cloud",
+                desc: "Huawei & JAC smart vehicle alliance & automated super factory for intelligent mobility solutions.",
+                address: "No. 6 Longmian Mountain Road, Feixi County, Hefei, Anhui", lat: 31.691205415983397, lng: 117.20615036799911
             },
             { 
                 city: "Singapore", company: "Singapore Changi Airport (SIN)", topic: "Airport", isAirport: true,
@@ -467,14 +473,45 @@
                 city: "Hefei", company: "Hefei Xinqiao Airport (HFE)", topic: "Airport", isAirport: true,
                 desc: "Main international airport serving Hefei and Anhui province.",
                 address: "Shuangfeng Town, Chang'an Ave., Hefei, Anhui", lat: 31.7800, lng: 116.9778
+            },
+            {
+                city: "Hangzhou", company: "Cainiao HQ", topic: "Logistics/Smart Supply Chain",
+                desc: "Alibaba's logistics arm — smart warehousing, robotic sortation and last-mile delivery tech.",
+                address: "No. 501 Fengxin Road, Yuhang District, Hangzhou, Zhejiang", lat: 30.2823, lng: 120.0192
+            },
+            {
+                city: "Suzhou", company: "Shengze Railway Station (盛泽站)", topic: "HSR Station", isStation: true,
+                desc: "HSR stop on the Shanghai–Suzhou–Huzhou high-speed railway.",
+                address: "Wujiang District, Suzhou, Jiangsu", lat: 30.909193, lng: 120.564255
+            },
+            {
+                city: "Hefei", company: "Hefei South Railway Station (合肥南站)", topic: "HSR Station", isStation: true,
+                desc: "Hefei's primary HSR hub, connecting to Hangzhou, Nanjing and Shanghai.",
+                address: "Feicui Road, Baohe District, Hefei, Anhui", lat: 31.7508, lng: 117.2900
+            },
+            {
+                city: "Hangzhou", company: "Hangzhou West Railway Station (杭州西站)", topic: "HSR Station", isStation: true,
+                desc: "Hangzhou's newest HSR hub serving Yuhang District, used for onward services to Suzhou and Shanghai.",
+                address: "Yuhang District, Hangzhou, Zhejiang", lat: 30.3222, lng: 119.6996
+            },
+            {
+                city: "Hangzhou", company: "Hangzhou East Railway Station (杭州东站)", topic: "HSR Station", isStation: true,
+                desc: "Hangzhou's busiest HSR hub, serving Jianggan District with services across the Yangtze Delta.",
+                address: "Jianggan District, Hangzhou, Zhejiang", lat: 30.293606697206176, lng: 120.20850720369273
+            },
+            {
+                city: "Hangzhou", company: "Hangzhou Railway Station (杭州站)", topic: "HSR Station", isStation: true,
+                desc: "Hangzhou's main-line railway station, serving Shangcheng District near West Lake.",
+                address: "Shangcheng District, Hangzhou, Zhejiang", lat: 30.24492883459066, lng: 120.18229490450146
             }
         ];
 
         // ID references into `companies` (assigned index order above, 0-based)
         const COID = {
             BYD: 0, SZ_METRO_DEPOT: 1, ALI_CLOUD_VALLEY: 2, UNITREE: 3, DEEP_ROBOTICS: 4,
-            HUAWEI_LIANQIU: 7, STEC: 9, SZ_CHAOYANGLU_DEPOT: 10, HUAWEI_OPEN_LAB: 11,
-            HARMONY_HEFEI: 13, SIN: 14, SZX: 15, PVG: 17, SHENTONG: 19, HFE: 20
+            HUAWEI_LIANQIU: 7, PUZHEN: 8, STEC: 9, SZ_CHAOYANGLU_DEPOT: 10, HUAWEI_OPEN_LAB: 11, SUZHOU_SMART_STATION: 12, SUOG: 13,
+            HARMONY_HEFEI: 14, SIN: 15, SZX: 16, PVG: 18, SHENTONG: 20, HFE: 21, CAINIAO_HQ: 22, SHENGZE_STATION: 23,
+            HEFEI_SOUTH_STATION: 24, HANGZHOU_XI_STATION: 25, HANGZHOU_EAST_STATION: 26, HANGZHOU_STATION: 27
         };
 
         // Preset "Opt Itinerary V2" schedule (read-only), built from itinerary V2 source doc.
@@ -492,13 +529,13 @@
                 { type: 'visit', ampm: 'PM', poc: 'Shuya (Huawei)', id: COID.HARMONY_HEFEI, nameOverride: 'Hong Meng (鸿蒙) Factory' }
             ]},
             { day: 'D3', date: '26 Aug', accommodation: 'Hangzhou', stops: [
-                { type: 'transport', ampm: 'AM', title: 'Hefei → Hangzhou (HSR)', flightNo: 'G7614', details: 'Depart 7:40 · Arrive 10:08' },
+                { type: 'transport', ampm: 'AM', title: 'Hefei → Hangzhou (HSR)', flightNo: 'G7614', details: 'Depart 7:40 · Arrive 10:08', fromId: COID.HEFEI_SOUTH_STATION, toId: COID.HANGZHOU_XI_STATION },
                 { type: 'visit', ampm: 'PM', poc: 'Jiu Fu (Alibaba)', id: COID.UNITREE },
                 { type: 'visit', ampm: 'PM', poc: 'Jiu Fu (Alibaba)', id: COID.DEEP_ROBOTICS }
             ]},
             { day: 'D4', date: '27 Aug', accommodation: 'Shanghai', stops: [
                 { type: 'visit', ampm: 'AM', poc: 'Jiu Fu (Alibaba)', id: COID.ALI_CLOUD_VALLEY },
-                { type: 'transport', ampm: 'PM', title: 'Hangzhou → Shanghai (HSR/Car)', flightNo: 'G1584', details: 'Depart 13:07 · Arrive 14:00' },
+                { type: 'transport', ampm: 'PM', title: 'Hangzhou → Shanghai (HSR/Car)', flightNo: 'G1584', details: 'Depart 13:07 · Arrive 14:00', fromId: COID.HANGZHOU_XI_STATION },
                 { type: 'visit', ampm: 'PM', poc: 'Li Shijiang (Weibao)', id: COID.SHENTONG }
             ]},
             { day: 'D5', date: '28 Aug', accommodation: 'Shanghai', stops: [
@@ -525,22 +562,25 @@
                 { type: 'flight', ampm: 'PM', title: 'Singapore → Shenzhen', flightNo: 'CZ 8118', details: 'Depart 1:25 PM · Arrive 6:15 PM', fromId: COID.SIN, toId: COID.SZX }
             ]},
             { day: 'D1', date: '24 Aug', accommodation: 'Shenzhen', stops: [
-                { type: 'visit', ampm: 'AM', poc: 'Liu Kun (Puzhen)', note: "Meeting Puzhen's Data Governance Team.", id: COID.SZ_METRO_DEPOT },
-                { type: 'visit', ampm: 'PM', poc: 'Shuya (Huawei) or Jiufu (Alibaba)', id: COID.BYD }
+                { type: 'visit', ampm: 'AM', poc: 'Shuya (Huawei) or Jiufu (Alibaba)', id: COID.BYD },
+                { type: 'visit', ampm: 'PM', poc: 'Liu Kun (Puzhen)', note: "Meeting Puzhen's Data Governance Team.", id: COID.SZ_METRO_DEPOT },
+                { type: 'flight', ampm: 'PM', title: 'Shenzhen → Hefei', flightNo: 'ZH 9949', details: 'Depart 20:05 · Arrive 22:20', fromId: COID.SZX, toId: COID.HFE }
             ]},
             { day: 'D2', date: '25 Aug', accommodation: 'Hefei', stops: [
-                { type: 'flight', ampm: 'AM', title: 'Shenzhen → Hefei', flightNo: 'ZH 9943', details: 'Depart 8:30 · Arrive 10:45', fromId: COID.SZX, toId: COID.HFE },
-                { type: 'visit', ampm: 'PM', poc: 'Shuya (Huawei)', id: COID.HARMONY_HEFEI, nameOverride: 'Hong Meng (鸿蒙) Factory' }
+                { type: 'visit', ampm: 'AM', poc: 'Shuya (Huawei)', id: COID.HARMONY_HEFEI, nameOverride: 'Hong Meng (鸿蒙) Factory' },
+                { type: 'transport', ampm: 'PM', title: 'Hefei → Nanjing (Car)', toId: COID.PUZHEN },
+                { type: 'visit', ampm: 'PM', poc: 'Liu Kun (Puzhen)', id: COID.PUZHEN },
+                { type: 'transport', ampm: 'PM', title: 'Nanjing → Hangzhou (HSR)', flightNo: 'G235', details: 'Depart 19:00 · Arrive 20:01', toId: COID.HANGZHOU_XI_STATION }
             ]},
             { day: 'D3', date: '26 Aug', accommodation: 'Hangzhou', stops: [
-                { type: 'transport', ampm: 'AM', title: 'Hefei → Hangzhou (HSR)', flightNo: 'G7614', details: 'Depart 7:40 · Arrive 10:08' },
-                { type: 'visit', ampm: 'PM', poc: 'Jiu Fu (Alibaba)', id: COID.UNITREE },
-                { type: 'visit', ampm: 'PM', poc: 'Jiu Fu (Alibaba)', id: COID.DEEP_ROBOTICS }
+                { type: 'visit', ampm: 'AM', poc: 'Jiu Fu (Alibaba)', id: COID.UNITREE },
+                { type: 'visit', ampm: 'PM', poc: 'Jiu Fu (Alibaba)', id: COID.DEEP_ROBOTICS },
+                { type: 'visit', ampm: 'PM', poc: 'Jiu Fu (Alibaba)', id: COID.CAINIAO_HQ }
             ]},
             { day: 'D4', date: '27 Aug', accommodation: 'Suzhou', stops: [
                 { type: 'visit', ampm: 'AM', poc: 'Jiu Fu (Alibaba)', id: COID.ALI_CLOUD_VALLEY },
-                { type: 'transport', ampm: 'PM', title: 'Hangzhou → Suzhou (HSR)', flightNo: 'G7744', details: 'Depart 13:20 · Arrive 14:10' },
-                { type: 'visit', ampm: 'PM', poc: 'Shuya (Huawei)', id: COID.HUAWEI_OPEN_LAB }
+                { type: 'transport', ampm: 'PM', title: 'Hangzhou → Suzhou (HSR)', flightNo: 'G7744', details: 'Depart 13:20 · Arrive 14:10', fromId: COID.HANGZHOU_XI_STATION, toId: COID.SHENGZE_STATION },
+                { type: 'visit', ampm: 'PM', poc: 'Shuya (Huawei)', id: COID.SUZHOU_SMART_STATION, nameOverride: 'Suzhou Smart Station (Huawei Open Lab collab)' }
             ]},
             { day: 'D5', date: '28 Aug', accommodation: 'Shanghai', stops: [
                 { type: 'visit', ampm: 'AM', poc: 'Liu Kun (Puzhen)', id: COID.SZ_CHAOYANGLU_DEPOT },
@@ -549,7 +589,8 @@
             ]},
             { day: 'D6', date: '29 Aug', accommodation: 'Shanghai', stops: [
                 { type: 'visit', ampm: 'AM', poc: 'Liu Kun (Puzhen)', id: COID.HUAWEI_LIANQIU },
-                { type: 'visit', ampm: 'PM', poc: 'Xu Yang (STEC)', id: COID.STEC }
+                { type: 'visit', ampm: 'PM', poc: 'Xu Yang (STEC)', id: COID.STEC },
+                { type: 'visit', ampm: 'PM', poc: 'Xu Yang (STEC)', id: COID.SUOG }
             ]},
             { day: 'D7', date: '30 Aug', accommodation: 'Return to SG', stops: [
                 { type: 'flight', ampm: 'AM', title: 'Shanghai → Singapore', flightNo: 'SQ 825', details: 'Depart 12:35 AM · Arrive 5:55 AM', fromId: COID.PVG, toId: COID.SIN }
@@ -647,8 +688,17 @@
             };
         }
 
-        function createRouteTooltipHtml(data, activeType) {
+        function createRouteTooltipHtml(data, activeType, scheduledStop) {
             if (!data) return '';
+            const scheduleHtml = scheduledStop && (scheduledStop.flightNo || scheduledStop.details)
+                ? `<div class="mb-2 pb-1.5 border-b border-dashed border-gray-300 text-[11px]">
+                    <div class="font-bold text-gray-900">${scheduledStop.title || 'Booked Transfer'}</div>
+                    <div class="flex items-center justify-between mt-0.5">
+                        ${scheduledStop.flightNo ? `<span class="font-semibold text-brand-700">${scheduledStop.flightNo}</span>` : ''}
+                        ${scheduledStop.details ? `<span class="text-[10px] text-gray-500 text-right">${scheduledStop.details}</span>` : ''}
+                    </div>
+                   </div>`
+                : '';
             const flightHtml = data.flight.available 
                 ? `<div class="flex items-center justify-between text-xs py-1 border-b border-gray-100 ${activeType === 'flight' ? 'font-bold text-indigo-700 bg-indigo-50/90 -mx-1 px-1.5 rounded' : 'text-gray-700'}">
                     <span class="flex items-center gap-1.5">
@@ -703,6 +753,7 @@
                         </h4>
                         <span class="text-[10px] font-bold px-2 py-0.5 bg-brand-50 text-brand-700 rounded-full border border-brand-200">${data.distance}</span>
                     </div>
+                    ${scheduleHtml}
                     <div class="space-y-0.5">
                         ${flightHtml}
                         ${hsrHtml}
@@ -792,7 +843,34 @@
             { name: "Hampton by Hilton Suzhou Wuzhong", city: "Suzhou", address: "No. 38 Yingchun Road, Wuzhong District, Suzhou, Jiangsu, China", lat: 31.2645, lng: 120.6398, tier: "4 Stars", price: "from 68 SGD", brand: "Wuzhong District — strong match if your work location is closer to southern Suzhou or the Wuzhong / Guoxiang side (some Huawei-related office areas). Right by Yingchunlu Metro Station for commuting." },
             { name: "Mercure Hotel Suzhou Jinji Lake", city: "Suzhou", address: "Honghai Building, No. 72 Xingdu Street, Suzhou Industrial Park, Suzhou, Jiangsu, China", lat: 31.3175, lng: 120.7035, tier: "4 Stars", price: "from 78 SGD", brand: "Suzhou Industrial Park — best match if the Huawei OpenLab is in SIP. Strong business location, convenient for meetings, relatively close to metro access." },
             { name: "Holiday Inn Express Suzhou Industrial Park (蘇州工業園區智選假日酒店（蘇州奧林匹克體育中心店）)", city: "Suzhou", address: "Address unverified — confirmed to be in Suzhou Industrial Park near the Olympic Sports Center, but no detailed street address available from official results", lat: 31.3468, lng: 120.7552, tier: "4 Stars", brand: "Suzhou Industrial Park (Olympic Sports Center) — may suit a Huawei OpenLab-related stay in SIP; verify exact address before booking." },
-            { name: "Suzhou City Holiday Hotel (Shiquan Street Wangshi Garden)", city: "Suzhou", address: "No. 77 North Nanyuan Road, Canglang Subdistrict, Gusu District, Suzhou, Jiangsu, China", lat: 31.2972, lng: 120.6298, tier: "4 Stars", price: "from 48 SGD", brand: "Gusu District — not the closest likely business-base option, but a reasonable 4-star fallback for easier access to central Suzhou while keeping the stay affordable." }
+            { name: "Suzhou City Holiday Hotel (Shiquan Street Wangshi Garden)", city: "Suzhou", address: "No. 77 North Nanyuan Road, Canglang Subdistrict, Gusu District, Suzhou, Jiangsu, China", lat: 31.2972, lng: 120.6298, tier: "4 Stars", price: "from 48 SGD", brand: "Gusu District — not the closest likely business-base option, but a reasonable 4-star fallback for easier access to central Suzhou while keeping the stay affordable." },
+            { name: "Holiday Inn Express Shenzhen Guangming by IHG", city: "Shenzhen", address: "1st Floor, No. 8, Guangyuan 4th Road, Guangming District, Shenzhen", lat: 22.7712, lng: 113.9008, tier: "4 Stars", price: "82 SGD", brand: "Guangming District (~890m from area centre) — central location near financial center, government area, shopping malls, Guangmingcheng Railway Station and Metro Line 6. Restaurant, meeting room, guest laundry, fitness room. Good for business travel, short stays, convenient transport." },
+            { name: "Atour Hotel (Shenzhen Guangming New Town Phoenix City Metro Station)", city: "Shenzhen", address: "Building 3, Baoxin Technology Park, Guangyuan 5th Road, Guangming District, Shenzhen", lat: 22.7798, lng: 113.8965, tier: "4 Stars", price: "77 SGD", brand: "Guangming District (~1km from area centre) — modern business hotel about 2km from Guangmingcheng Railway Station, near Fenghuang Town Metro Station. Lobby bar, restaurant, guest laundry, meeting room, fitness room, parking. Good for business travelers and repeat stays." },
+            { name: "Hilton Garden Inn Shenzhen Guangming Hongqiao Park", city: "Shenzhen", address: "No. 1328 Ketai Road, Guangming District, Shenzhen", lat: 22.7842, lng: 113.9085, tier: "4 Stars", price: "86 SGD", brand: "Guangming District (~1.7km from area centre) — near Hongqiao Park, cultural/arts activity center, and Guangming City high-speed rail area. Restaurant, business center, meeting room, swimming pool, fitness room. Good for travelers wanting a branded stay near Hongqiao Park." },
+            { name: "Hongfan International Hotel (Shenzhen Hongqiao Park Guangming City Subway Station Branch)", city: "Shenzhen", address: "Tower B, Building 8, Phase 4, Huaqiang Chuangye Industrial Park, Guangming District, Shenzhen", lat: 22.7655, lng: 113.9145, tier: "4 Stars", price: "66 SGD", brand: "Guangming District (~2.5km from area centre) — very good price-to-value, convenient for Guangming City high-speed rail access, near Hongqiao Park and Dadingling Greenway. Restaurant, lobby bar, guest laundry, meeting room, library, fitness room. Good for value seekers who still want newer facilities." },
+            { name: "ARGO HOTEL", city: "Shenzhen", address: "No. 99 Tiyugongyuan Road, Guangming Subdistrict, Guangming District, Shenzhen", lat: 22.7598, lng: 113.8862, tier: "4 Stars", price: "64 SGD", brand: "Guangming District (~2.8km from area centre) — most economical 4-star choice, restaurant, meeting room, room service, parking-related convenience. Good for simple stays on a lower budget." }
+        ];
+
+        // Budget hotel options from "China Companies - Copy of Hotels (1).csv" (same hotel layer, per-night + total price shown on hover)
+        // Rows without a geocode in the source CSV are skipped: PARKPLAZA HEFEI, Atour Hotel (Hangzhou Zhongshan North Road),
+        // Friendship Hotel Hangzhou (West Lake), Crystal Hotel Hangzhou West Lake Nanshan Road.
+        const csvHotels = [
+            { name: "Mercure Hefei Sunac", city: "Hefei", address: "No 356 Wannianbu Road, Hefei, China", lat: 31.703723568013228, lng: 117.30718297953513, tier: "Budget Option", pricePerNight: "53 SGD", nights: 1, totalPrice: "53 SGD", dates: "24/8-25/8" },
+            { name: "Novotel Hefei Sunac", city: "Hefei", address: "Hefei Sunac Area, Hefei, China", lat: 31.701578979816716, lng: 117.30750845567935, tier: "Budget Option", pricePerNight: "48 SGD", nights: 1, totalPrice: "48 SGD", dates: "24/8-25/8" },
+            { name: "Atour Hotel Hefei Binhu Times Square Branch", city: "Hefei", address: "Binhu Times Square, Hefei, China", lat: 31.71376312089739, lng: 117.29874281937597, tier: "Budget Option", pricePerNight: "55 SGD", nights: 1, totalPrice: "55 SGD", dates: "24/8-25/8" },
+            { name: "Mercure Hangzhou West Lake Yuquan", city: "Hangzhou", address: "136 Yugu Road Xihu District, West Lake District – Xixi Wetland Park, Hangzhou, China, 310012", lat: 30.258630894883396, lng: 120.12328292159181, tier: "Budget Option", pricePerNight: "119 SGD", nights: 2, totalPrice: "238 SGD", dates: "25/8-27/8" },
+            { name: "SkyBird Hotel (West Lake Hefang Street)", city: "Hangzhou", address: "No. 193, Zhongshan Middle Road, Shangcheng District, Hangzhou Main Train Station, Hangzhou, China, 310000", lat: 30.244013673349805, lng: 120.17036064270032, tier: "Budget Option", pricePerNight: "79 SGD", nights: 2, totalPrice: "158 SGD", dates: "25/8-27/8" },
+            { name: "EVEN Hotel Hangzhou West Lake by IHG", city: "Hangzhou", address: "Building B, Dongfang Jinzuo, Shangcheng District, Hangzhou Main Train Station, Hangzhou, China, 310000", lat: 30.25344063734822, lng: 120.16948282252365, tier: "Budget Option", pricePerNight: "156 SGD", nights: 2, totalPrice: "312 SGD", dates: "25/8-27/9" },
+            { name: "Atour Hotel Hangzhou Pinghai Road Hubin West Lake", city: "Hangzhou", address: "No. 8 Pinghai road, Shangcheng District, Hangzhou Main Train Station, 310000", lat: 30.255284794752335, lng: 120.17000612343814, tier: "Budget Option", pricePerNight: "102 SGD", nights: 2, totalPrice: "204 SGD", dates: "25/8-27/9" },
+            { name: "Nostalgia S Hotel - Hangzhou West Lake Intime", city: "Hangzhou", address: "No. 56, Hefang Street, Shangcheng District, Hangzhou City, Zhejiang Province, 310000", lat: 30.24060533623071, lng: 120.17461713718558, tier: "Budget Option", pricePerNight: "80 SGD", nights: 2, totalPrice: "160 SGD", dates: "25/8-27/10" },
+            { name: "Atour Hotel Suzhou Dushu Lake Higher Education Area Xinghu Street", city: "Suzhou", address: "No. 116 Dongyan Road, Jinji Lake and Suzhou Expo Center, Suzhou, China, 215000", lat: 31.28731688033076, lng: 120.72908746648432, tier: "Budget Option", pricePerNight: "94 SGD", nights: 1, totalPrice: "94 SGD", dates: "27/8-28/8" },
+            { name: "Hampton by Hilton Suzhou Guanqian Street", city: "Suzhou", address: "No. 9-69 Pishi Street, Gusu District, Guanqian/Shilu/Shiquan Street City Center, Suzhou, China, 215005", lat: 31.312656452329826, lng: 120.6249845577426, tier: "Budget Option", pricePerNight: "112 SGD", nights: 1, totalPrice: "112 SGD", dates: "27/8-28/8" },
+            { name: "IntercityHotel Suzhou Jinji Lake （城際酒店 金雞湖）", city: "Suzhou", address: "1st Floor, No. 288 Suzhou Avenue East, Jinji Lake and Suzhou Expo Center, Suzhou, China", lat: 31.324314252552913, lng: 120.7299916186143, tier: "Budget Option", pricePerNight: "115 SGD", nights: 1, totalPrice: "115 SGD", dates: "27/8-28/8" },
+            { name: "Four Points By Sheraton Suzhou", city: "Suzhou", address: "No. 8 Moon Bay Road, Jinji Lake and Suzhou Expo Center, Suzhou, China, 215123", lat: 31.26190511090234, lng: 120.72203780723694, tier: "Budget Option", pricePerNight: "126 SGD", nights: 1, totalPrice: "126 SGD", dates: "27/8-28/8" },
+            { name: "Oakwood Hotel & Residence Suzhou", city: "Suzhou", address: "No.6 Moon Bay Road, Suzhou Industrial Park, Jinji Lake and Suzhou Expo Center, Suzhou, China, 215123", lat: 31.262236448171972, lng: 120.71997415066545, tier: "Budget Option", pricePerNight: "65 SGD", nights: 1, totalPrice: "65 SGD", dates: "27/8-28/8" },
+            { name: "Fairfield by Marriott Shanghai Xuhui Center", city: "Shanghai", address: "Xuhui Center, Shanghai, China", lat: 31.198536905202932, lng: 121.44677884343078, tier: "Budget Option", pricePerNight: "147 SGD", nights: 1, totalPrice: "147 SGD", dates: "28/8-29/8" },
+            { name: "UrCove By Hyatt Shanghai On the Bund", city: "Shanghai", address: "The Bund, Shanghai, China", lat: 31.236549282794805, lng: 121.49248989021434, tier: "Budget Option", pricePerNight: "146 SGD", nights: 1, totalPrice: "146 SGD", dates: "28/8-29/8" },
+            { name: "Novotel Shanghai Jing'an", city: "Shanghai", address: "Jing'an District, Shanghai, China", lat: 31.251230970968685, lng: 121.46954041052201, tier: "Budget Option", pricePerNight: "107 SGD", nights: 1, totalPrice: "107 SGD", dates: "28/8-29/8" }
         ];
 
         // High-Speed Rail station data (separate layer, own symbology, toggled independently of hotels/companies/POIs)
@@ -800,8 +878,12 @@
             { name: "Hefei Station", district: "Yaohai District", city: "Hefei", lat: 31.8893, lng: 117.3115, dms: "31°53′21″ N, 117°18′41″ E" },
             { name: "Hefei South Station", district: "Baohe District", city: "Hefei", lat: 31.7989, lng: 117.2903, dms: "31°47′56″ N, 117°17′25″ E" },
             { name: "Hangzhou East (Dong) Station", district: null, city: "Hangzhou", lat: 30.2935, lng: 120.2084, dms: "30°17′36.6″ N, 120°12′30.1″ E" },
+            { name: "Hangzhou West Station", district: "Yuhang District", city: "Hangzhou", lat: 30.3005, lng: 119.9817, dms: "30°30′01″ N, 119°58′54″ E" },
             { name: "Shanghai Pudong / East Station", district: "Zhuqiao Town", city: "Shanghai", lat: 31.1244, lng: 121.7731, dms: "31°07′28″ N, 121°46′23″ E" },
-            { name: "Shanghai Hongqiao Station", district: null, city: "Shanghai", lat: 31.1963, lng: 121.3161, dms: "31°11′46.7″ N, 121°18′58.1″ E" }
+            { name: "Shanghai Hongqiao Station", district: null, city: "Shanghai", lat: 31.1963, lng: 121.3161, dms: "31°11′46.7″ N, 121°18′58.1″ E" },
+            { name: "Suzhou Station (苏州站)", district: null, city: "Suzhou", lat: 31.33056, lng: 120.60639, dms: "31°19′50″ N, 120°36′23″ E" },
+            { name: "Taicang Station (太仓站)", district: null, city: "Taicang", lat: 31.51389, lng: 121.19222, dms: "31°30′50″ N, 121°11′32″ E" },
+            { name: "Changshu Station (常熟站)", district: null, city: "Changshu", lat: 31.69917, lng: 120.77611, dms: "31°41′57″ N, 120°46′34″ E" }
         ];
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -915,6 +997,21 @@
                         popupAnchor: [0, -15]
                     });
                     marker = L.marker([data.lat, data.lng], { icon: airportIcon }).addTo(map);
+                } else if (data.isStation) {
+                    const stationIcon = L.divIcon({
+                        className: 'train-marker-wrapper',
+                        html: `
+                            <div class="train-marker-container" title="${data.company}">
+                                <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                                    <path d="M12 2c-4 0-7 1-7 4v9a3 3 0 003 3l-1.5 1.5v.5h11v-.5L16 18a3 3 0 003-3V6c0-3-3-4-7-4zm-5 4h10M9 15.5h.01M15 15.5h.01"/>
+                                </svg>
+                            </div>
+                        `,
+                        iconSize: [26, 26],
+                        iconAnchor: [13, 13],
+                        popupAnchor: [0, -13]
+                    });
+                    marker = L.marker([data.lat, data.lng], { icon: stationIcon }).addTo(map);
                 } else {
                     marker = L.circleMarker([data.lat, data.lng], {
                         radius: markerRadius,
@@ -953,7 +1050,7 @@
                     autoPan: true
                 });
 
-                if (!data.isAirport) {
+                if (!data.isAirport && !data.isStation) {
                     marker.on('mouseover', function () { if (!isMobile()) this.setRadius(16); });
                     marker.on('mouseout', function () { if (!isMobile()) this.setRadius(markerRadius); });
                 }
@@ -980,6 +1077,13 @@
                     labelEl.innerHTML = `
                         <svg class="w-3.5 h-3.5 fill-indigo-600 shrink-0" viewBox="0 0 24 24">
                             <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 20v-5.5l8 2.5z"/>
+                        </svg>
+                        <span>${data.company}</span>
+                    `;
+                } else if (data.isStation) {
+                    labelEl.innerHTML = `
+                        <svg class="w-3.5 h-3.5" style="fill: #f59e0b;" viewBox="0 0 24 24">
+                            <path d="M12 2c-4 0-7 1-7 4v9a3 3 0 003 3l-1.5 1.5v.5h11v-.5L16 18a3 3 0 003-3V6c0-3-3-4-7-4zm-5 4h10M9 15.5h.01M15 15.5h.01"/>
                         </svg>
                         <span>${data.company}</span>
                     `;
@@ -1152,7 +1256,7 @@
                 popupAnchor: [0, -13]
             });
 
-            const allHotels = hotels.concat(luxuryHotels, fourStarHotels);
+            const allHotels = hotels.concat(luxuryHotels, fourStarHotels, csvHotels);
 
             allHotels.forEach((hotel) => {
                 const marker = L.marker([hotel.lat, hotel.lng], { icon: hotelIcon });
@@ -1171,7 +1275,9 @@
                         <div class="text-xs text-gray-700 bg-gray-50 p-2.5 rounded-lg border border-gray-100 leading-relaxed space-y-1">
                             ${hotel.rating ? `<div><span class="font-semibold">Rating:</span> ${hotel.rating}</div>` : ''}
                             ${hotel.price ? `<div><span class="font-semibold">Price:</span> ${hotel.price}</div>` : ''}
-                            <div><span class="font-semibold">Brand/Notes:</span> ${hotel.brand}</div>
+                            ${hotel.pricePerNight ? `<div><span class="font-semibold">Price/Night:</span> ${hotel.pricePerNight}</div>` : ''}
+                            ${hotel.totalPrice ? `<div><span class="font-semibold">Total (${hotel.nights} night${hotel.nights > 1 ? 's' : ''}):</span> ${hotel.totalPrice}</div>` : ''}
+                            ${hotel.brand ? `<div><span class="font-semibold">Brand/Notes:</span> ${hotel.brand}</div>` : ''}
                         </div>
                     </div>
                 `;
@@ -1183,7 +1289,9 @@
                         <div class="text-xs text-gray-500 mt-1">${hotel.city} &middot; ${hotel.address}</div>
                         ${hotel.rating ? `<div class="text-xs text-gray-700 mt-1"><span class="font-semibold">Rating:</span> ${hotel.rating}</div>` : ''}
                         ${hotel.price ? `<div class="text-xs text-gray-700 mt-0.5"><span class="font-semibold">Price:</span> ${hotel.price}</div>` : ''}
-                        <div class="text-xs text-gray-700 mt-0.5"><span class="font-semibold">Brand/Notes:</span> ${hotel.brand}</div>
+                        ${hotel.pricePerNight ? `<div class="text-xs text-gray-700 mt-0.5"><span class="font-semibold">Price/Night:</span> ${hotel.pricePerNight}</div>` : ''}
+                        ${hotel.totalPrice ? `<div class="text-xs text-gray-700 mt-0.5"><span class="font-semibold">Total (${hotel.nights} night${hotel.nights > 1 ? 's' : ''}):</span> ${hotel.totalPrice}</div>` : ''}
+                        ${hotel.brand ? `<div class="text-xs text-gray-700 mt-0.5"><span class="font-semibold">Brand/Notes:</span> ${hotel.brand}</div>` : ''}
                     </div>
                 `;
 
@@ -1627,21 +1735,25 @@
 
                 flat.forEach(stop => {
                     delete stop.edge;
-                    if (stop.type === 'transport') {
+                    // A 'transport' stop with a toId is a waypoint (e.g. HSR station) with known
+                    // coordinates — route through it like a flight leg, rather than just tagging type.
+                    if (stop.type === 'transport' && stop.toId == null) {
                         pendingType = /HSR/i.test(stop.title || '') ? 'hsr' : 'day';
                         pendingStop = stop;
                         return;
                     }
-                    if (stop.type === 'flight') {
-                        if (prevId !== null && prevId !== stop.fromId) {
-                            const e = { fromId: prevId, toId: stop.fromId, type: pendingType, stop: pendingStop };
+                    if (stop.type === 'flight' || stop.type === 'transport') {
+                        const edgeType = stop.type === 'flight' ? 'flight' : (/HSR/i.test(stop.title || '') ? 'hsr' : 'day');
+                        const fromId = stop.fromId != null ? stop.fromId : prevId;
+                        if (prevId !== null && prevId !== fromId) {
+                            const e = { fromId: prevId, toId: fromId, type: pendingType, stop: pendingStop };
                             edges.push(e);
                             if (pendingStop) pendingStop.edge = e;
                             pendingStop = null;
                         }
-                        const flightEdge = { fromId: stop.fromId, toId: stop.toId, type: 'flight', stop: stop };
-                        edges.push(flightEdge);
-                        stop.edge = flightEdge;
+                        const mainEdge = { fromId: fromId, toId: stop.toId, type: edgeType, stop: stop };
+                        edges.push(mainEdge);
+                        stop.edge = mainEdge;
                         prevId = stop.toId;
                         pendingType = 'day';
                         return;
@@ -1764,7 +1876,7 @@
                     (v2EdgesByMarker[edge.fromId] ||= []).push(edgeRef);
                     (v2EdgesByMarker[edge.toId] ||= []).push(edgeRef);
 
-                    const tooltipContent = createRouteTooltipHtml(travelData, edge.type);
+                    const tooltipContent = createRouteTooltipHtml(travelData, edge.type, edge.stop);
 
                     hitLine.bindTooltip(tooltipContent, {
                         sticky: true,

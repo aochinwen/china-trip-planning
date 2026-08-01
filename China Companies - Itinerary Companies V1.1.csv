@@ -1,0 +1,30 @@
+Day,POC,Date,City,Company,Topic,Description,Address,Notes,Transportation Required,Transport Details,Accommandation,Memo
+D0,,23/8/2026,SG-SZ,,,,,PM,PM Flight Singapore - Shenzhen,"CZ 8118   
+Depart:1:25 PM        
+Arrive:6:15 PM",Shenzhen,
+D1,Shuya(Huawei) or Jiufu (Alibaba),24/8/2025,Shenzhen,Shenzhen Metro Smart Depot or zhu zi lin,RPC,Manufacturing automation at scale & automated urban-transit systems,"Changzhen Depot Complex, Guangming District, Shenzhen",AM,,,,
+D1,Liu Kun (Puzhen),24/8/2026,Shenzhen,BYD Factory,Lights out depot,Meeting Puzhen's Data Governnace Team. ,广东省汕尾市海丰县梅陇镇深圳市 - 汕尾市产业转移合作园（天星湖片区）06-02-67 地块,PM,PM Flight: Shenzhen - Hefei,"ZH9951 (Shenzhen - Hefei)
+Depart:22:10
+Arrive:00:15",Hefei,Travel time: 1h45min one way
+D2,Shuya(Huawei),25/8/2026,Hefei,Hong Meng (鸿蒙) Super Factory  ,Lights out depot,,安徽省合肥市肥西县龙眠山路 6 号,AM,PM HRS: Hefei South - Hangzhou Xi,Car transfer from Hefei to Nanjing,,
+D2,Liu Kun (Puzhen),25/8/2026,Nanjing,Puzhen,RPC,"Digital design and smart manufacturing of rail transit vehicles using advanced PLM, 3D CAD, and process simulation systems.","No.68, Puzhu North Road, Pukou District, Nanjing City, China",PM,,"G235 (Nanjing - Hangzhou)
+Depart: 19:00
+Arrive:20:01",Hangzhou,
+D3,Jiu Fu (Alibaba),26/8/2026,Hangzhou,Unitree,NAIC,Robotics & embodied AI for inspection and station automation,"3rd Floor, Building 1, Fengda Creative Park, No. 88 Dongliu Road, Binjiang District, Hangzhou",AM (takes 1 hr to Deep Robotics),,,,
+D3,Jiu Fu (Alibaba),26/8/2026,Hangzhou,Deep Robotics,NAIC,"Autonomous inspection robots for depots, tunnels and infrastructure","Building 3, Zijin Dream Plaza, 36 Xinran Street, Xihu District, Hangzhou",PM,,,,
+D3,Jiu Fu (Alibaba),26/8/2026,Hangzhou,Cainiao HQ (45 min - 1hr tour),Lights out depot,yuhang city,,PM,,,,
+D4,Jiu Fu (Alibaba),27/8/2026,Hangzhou,Alibaba Cloud Valley,AI/Cloud,AI service applications · City Brain platform & cloud infrastructure. Real-time incident detection & cross-agency data fusion at city scale,"969 West Wen Yi Road, Yuhang District, Hangzhou",AM,PM HSR: Hangzhou Xi - Suzhou HSR Station,"G7534 (Hangzhou Xi - Suzhou HSR)
+Depart:13:28 
+Arrive:14:49",,
+D4,Shuya(Huawei),27/8/2026,Suzhou,Huawei Open Lab or Suzhou Smart Station,AI/Cloud,"Collaborative innovation hub developing cloud, AI, and smart city solutions through open ecosystem partnerships.",江苏省苏州市苏州工业园区江韵路9号/苏州市吴中区6号线 涵青桥,PM,,,Suzhou,"openlab: depends on hongtao
+smart station: AI Customer service, AI smart maintenance, AI smart detection, public complaint"
+D5,Liu Kun (Puzhen),28/8/2026,Suzhou,Suzhou Chaoyanglu Smart Depot,Lights out depot,auotamated train inspection & depot VA,"No. 1610, Zhenchuan West Road, Kunshan City, Suzhou City, Jiangsu Province, China.",AM,PM Car: Suzhou - Shanghai (1.5hr),,,
+D5,Li Shijiang (Weibao),28/8/2026,Shanghai ,Shanghai  shengtong,AI/Cloud,"Digital O&M Control Center, digi solution for assets mgmt and production mgmt (construction, incident response, fault mgmt)","3rd Floor, Business Building, No. 12 Hengshan Road, Shanghai, China",PM,,,Shanghai,张 lingxiang (big data)
+D6,Liu Kun (Puzhen),29/8/2026,Shanghai,Huawei Lianqiu Lake R&D,AI/Cloud,"Huawei's largest global R&D hub focusing on breakthroughs in 5G, cloud computing, artificial intelligence, and AI Data Lake solutions.","Jinze Town, Qingpu District, Shanghai",AM,,,,
+D6,Xu Yang (STEC),29/8/2026,Shanghai,STEC + SUOG,Lights Out Tunnel,"AI-driven underground engineering, integrating digital twin technology and machine learning for real-time tunnel monitoring and smart construction.","1099 South Wanping Rd., Xuhui District, Shanghai",PM,,,,
+Skip,Xu Yang (STEC),29/8/2026,Shanghai,SUOG,Lights Out Tunnel,responsible for the operation and maintenance of half of Shanghai’s rail transit network,"No. 600, Dapu Road, Huangpu District, Shanghai, P.R. China",TBC,,,,
+Skip,Richard (Agibot),,Shanghai,Agibot,NAIC,"Embodied AI and humanoid robots designed for real-world industrial automation, commercial services, and dexterous manipulation.","No. 2555, Xiupu Road, Pudong New Area, Shanghai",TBC,,,,
+D7,,30/8/2026,,,,,,,,"SQ825
+Depart: 12:35AM
+Arrive: 5:55AM",Return to SG,
+Skip,Khintat (Hikvision),,Hangzhou,Hikvision,VA,"Guanlan large-scale AI models for advanced video analytics, intelligent event recognition, and multimodal semantic search.","No.555 Qianmo Road, Binjiang District, Hangzhou",Skip,,,,
